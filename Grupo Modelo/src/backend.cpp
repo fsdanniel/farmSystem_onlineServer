@@ -12,6 +12,7 @@ Backend::Backend() {
             cout << "Can't open database" << endl;
             return;
         }
+        
     } catch (const std::exception &e){
 
         cerr << e.what() << std::endl;
@@ -26,6 +27,7 @@ void Backend::insereAdministrador(string Adm_Nome, string Adm_Senha, string Adm_
     string s;
 
     try{
+
         s = "INSERT INTO Administradores (Adm_Nome, Adm_Senha, Adm_Nascimento, Adm_Email) VALUES ( '"+ Adm_Nome +"', MD5('" + Adm_Senha +"'), '" + Adm_Data + "', '" + Adm_Email + "');";
         sql = s.c_str();
 
@@ -58,9 +60,9 @@ void Backend::removeAdministrador(string Adm_Nome) {
     string s;
 
     try{
+
         s = "UPDATE Administradores SET Adm_Ativo = FALSE WHERE Adm_Nome = '"+ Adm_Nome +"';";
         sql = s.c_str();
-
 
         /* Create a transactional object. */
         work W(conn); 
@@ -91,9 +93,9 @@ void Backend::insereFuncionario(string Fun_Nome, string Fun_Senha, string Fun_Da
     string s;
 
     try{
+
         s = "INSERT INTO Funcionarios (Fun_Nome, Fun_Senha, Fun_Nascimento, Fun_Email) VALUES ( '"+ Fun_Nome +"', MD5('" + Fun_Senha + "'), '" + Fun_Data + "', '" + Fun_Email + "');";
         sql = s.c_str();
-
 
         /* Create a transactional object. */
         work W(conn); 
@@ -124,9 +126,9 @@ void Backend::removeFuncionario(string Fun_Nome) {
     string s;
 
     try{
+
         s = "UPDATE Funcionarios SET Fun_Ativo = FALSE WHERE Fun_Nome = '"+ Fun_Nome +"';";
         sql = s.c_str();
-
 
         /* Create a transactional object. */
         work W(conn); 
@@ -157,6 +159,7 @@ void Backend::insereVeterinario(string Vet_Nome, string Vet_Senha, string Vet_Da
     string s;
 
     try{
+
         s = "INSERT INTO Veterinarios (Vet_Nome, Vet_Senha, Vet_Nascimento, Vet_Email) VALUES ( '"+ Vet_Nome +"', MD5('" + Vet_Senha + "'), '" + Vet_Data + "', '" + Vet_Email + "');";
         sql = s.c_str();
 
@@ -190,6 +193,7 @@ void Backend::removeVeterinario(string Vet_Nome) {
     string s;
 
     try{
+
         s = "UPDATE Veterinarios SET Vet_Ativo = FALSE WHERE Vet_Nome = '"+ Vet_Nome +"';";
         sql = s.c_str();
 
@@ -207,7 +211,7 @@ void Backend::removeVeterinario(string Vet_Nome) {
         return;
 
     
-    }catch (const std::exception &e){
+    }catch (const std::exception &e) {
 
         cerr << e.what() << std::endl;
 
@@ -236,6 +240,7 @@ bool Backend::loginAdministrador(const string &Adm_Nome, const string &Adm_Senha
             count = r[0][0].as<int>();
 
         W.commit();
+
         return (count > 0);
     }
     catch (const std::exception &e) {
@@ -265,6 +270,7 @@ bool Backend::loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) 
             count = r[0][0].as<int>();
 
         W.commit();
+
         return (count > 0);
     }
     catch (const std::exception &e) {
@@ -272,9 +278,11 @@ bool Backend::loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) 
         return false;
 
     }
+
 }
 
 bool Backend::loginVeterinario(const string &Vet_Nome, const string &Vet_Senha) {
+
     try {
 
         connection conn("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
@@ -292,8 +300,11 @@ bool Backend::loginVeterinario(const string &Vet_Nome, const string &Vet_Senha) 
             count = r[0][0].as<int>();
 
         W.commit();
+
         return (count > 0);
+
     }
+
     catch (const std::exception &e) {
         
         return false;

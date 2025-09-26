@@ -1,8 +1,6 @@
 DROP TABLE IF EXISTS Administradores;
 DROP TABLE IF EXISTS Funcionarios;
 DROP TABLE IF EXISTS Veterinarios;
-DROP TABLE IF EXISTS Geneticas;
-DROP TABLE IF EXISTS Edificio;
 
 CREATE TABLE Administradores
 (
@@ -45,7 +43,6 @@ DELETE FROM Administradores;
 DELETE FROM Funcionarios;
 DELETE FROM Veterinarios;
 
-
 SELECT COUNT(*) FROM Administradores
 WHERE Adm_Ativo = TRUE AND Adm_Senha = MD5('WLEF7YTE') AND Adm_Nome = 'Aeronautics Barata';
 
@@ -55,7 +52,7 @@ CREATE TABLE Geneticas
 	Gen_Nome character varying,
 	Gen_Descricao character varying NULL,
 	PRIMARY KEY(Gen_Nome)
-);
+)
 
 CREATE TABLE Edificio
 (
@@ -63,7 +60,7 @@ CREATE TABLE Edificio
 	Edi_Nome character varying,
 	Edi_Descricao character varying NULL,
 	PRIMARY KEY(Edi_NOME)
-);
+)
 
 
 

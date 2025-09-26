@@ -3,6 +3,9 @@
 
 Backend::Backend() {
     try {
+
+        connection conn("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
+
         if(conn.is_open()) {
             cout << "Opened database successfully! " << conn.dbname() << endl;
         } else {
@@ -215,7 +218,11 @@ void Backend::removeVeterinario(string Vet_Nome) {
 }
 
 bool Backend::loginAdministrador(const string &Adm_Nome, const string &Adm_Senha) {
-    try {
+
+     try {
+
+        connection conn("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
+    
         conn.prepare("check_admin",
                   "SELECT COUNT(*) FROM Administradores "
                   "WHERE Adm_Ativo = TRUE AND Adm_Senha = MD5($1) AND Adm_Nome = $2");
@@ -236,10 +243,15 @@ bool Backend::loginAdministrador(const string &Adm_Nome, const string &Adm_Senha
         return false;
 
     }
+
 }
 
 bool Backend::loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) {
+
     try {
+
+        connection conn("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
+    
         conn.prepare("check_admin",
                   "SELECT COUNT(*) FROM Funcionarios "
                   "WHERE Fun_Ativo = TRUE AND Fun_Senha = MD5($1) AND Fun_Nome = $2");
@@ -264,6 +276,9 @@ bool Backend::loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) 
 
 bool Backend::loginVeterinario(const string &Vet_Nome, const string &Vet_Senha) {
     try {
+
+        connection conn("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
+
         conn.prepare("check_admin",
                   "SELECT COUNT(*) FROM veterinarios "
                   "WHERE Vet_Ativo = TRUE AND Vet_Senha = MD5($1) AND Vet_Nome = $2");

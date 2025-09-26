@@ -2,7 +2,7 @@
 CXX = g++
 
 # define any compile-time flags
-CXXFLAGS	:= -std=c++17 -Wall -Wextra -g 
+CXXFLAGS	:= -std=c++17 -Wall -Wextra -g -finput-charset=UTF-8 -fexec-charset=UTF-8
 
 # define output directory
 OUTPUT	:= output

@@ -1,31 +1,33 @@
 #include "../include/backend.hpp"
+#include "backend.hpp"
 
-void insereAdministrador(string Adm_Nome, string Adm_Senha, string Adm_Data, string Adm_Email) {
+Backend::Backend() {
+    try {
+        if(conn.is_open()) {
+            cout << "Opened database successfully! " << conn.dbname() << endl;
+        } else {
+            cout << "Can't open database" << endl;
+            return;
+        }
+    } catch (const std::exception &e){
 
+        cerr << e.what() << std::endl;
+
+        return;
+
+    }
+}
+
+void Backend::insereAdministrador(string Adm_Nome, string Adm_Senha, string Adm_Data, string Adm_Email) {
     const char * sql;
     string s;
 
     try{
-
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database" << endl;
-            return;
-
-        }
-
         s = "INSERT INTO Administradores (Adm_Nome, Adm_Senha, Adm_Nascimento, Adm_Email) VALUES ( '"+ Adm_Nome +"', MD5('" + Adm_Senha +"'), '" + Adm_Data + "', '" + Adm_Email + "');";
         sql = s.c_str();
 
-
         /* Create a transactional object. */
-        work W(C); 
+        work W(conn); 
 
         W.exec( sql );
         W.commit();
@@ -37,7 +39,7 @@ void insereAdministrador(string Adm_Nome, string Adm_Senha, string Adm_Data, str
         return;
 
     
-    }catch (const std::exception &e){
+    } catch (const std::exception &e){
 
         cerr << e.what() << std::endl;
 
@@ -47,32 +49,18 @@ void insereAdministrador(string Adm_Nome, string Adm_Senha, string Adm_Data, str
 
 }
 
-void removeAdministrador(string Adm_Nome) {
+void Backend::removeAdministrador(string Adm_Nome) {
 
     const char * sql;
     string s;
 
     try{
-
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database..." << endl;
-            return;
-
-        }
-
         s = "UPDATE Administradores SET Adm_Ativo = FALSE WHERE Adm_Nome = '"+ Adm_Nome +"';";
         sql = s.c_str();
 
 
         /* Create a transactional object. */
-        work W(C); 
+        work W(conn); 
 
         W.exec( sql );
         W.commit();
@@ -84,7 +72,7 @@ void removeAdministrador(string Adm_Nome) {
         return;
 
     
-    }catch (const std::exception &e){
+    } catch (const std::exception &e){
 
         cerr << e.what() << std::endl;
 
@@ -94,32 +82,18 @@ void removeAdministrador(string Adm_Nome) {
 
 }
 
-void insereFuncionario(string Fun_Nome, string Fun_Senha, string Fun_Data, string Fun_Email) {
+void Backend::insereFuncionario(string Fun_Nome, string Fun_Senha, string Fun_Data, string Fun_Email) {
 
     const char * sql;
     string s;
 
     try{
-
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database" << endl;
-            return;
-
-        }
-
         s = "INSERT INTO Funcionarios (Fun_Nome, Fun_Senha, Fun_Nascimento, Fun_Email) VALUES ( '"+ Fun_Nome +"', MD5('" + Fun_Senha + "'), '" + Fun_Data + "', '" + Fun_Email + "');";
         sql = s.c_str();
 
 
         /* Create a transactional object. */
-        work W(C); 
+        work W(conn); 
 
         W.exec( sql );
         W.commit();
@@ -131,7 +105,7 @@ void insereFuncionario(string Fun_Nome, string Fun_Senha, string Fun_Data, strin
         return;
 
     
-    }catch (const std::exception &e){
+    } catch (const std::exception &e){
 
         cerr << e.what() << std::endl;
 
@@ -141,32 +115,18 @@ void insereFuncionario(string Fun_Nome, string Fun_Senha, string Fun_Data, strin
 
 }
 
-void removeFuncionario(string Fun_Nome) {
+void Backend::removeFuncionario(string Fun_Nome) {
 
     const char * sql;
     string s;
 
     try{
-
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database..." << endl;
-            return;
-
-        }
-
         s = "UPDATE Funcionarios SET Fun_Ativo = FALSE WHERE Fun_Nome = '"+ Fun_Nome +"';";
         sql = s.c_str();
 
 
         /* Create a transactional object. */
-        work W(C); 
+        work W(conn); 
 
         W.exec( sql );
         W.commit();
@@ -178,7 +138,7 @@ void removeFuncionario(string Fun_Nome) {
         return;
 
     
-    }catch (const std::exception &e){
+    } catch (const std::exception &e){
 
         cerr << e.what() << std::endl;
 
@@ -188,32 +148,18 @@ void removeFuncionario(string Fun_Nome) {
 
 }
 
-void insereVeterinario(string Vet_Nome, string Vet_Senha, string Vet_Data, string Vet_Email) {
+void Backend::insereVeterinario(string Vet_Nome, string Vet_Senha, string Vet_Data, string Vet_Email) {
 
     const char * sql;
     string s;
 
     try{
-
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database" << endl;
-            return;
-
-        }
-
         s = "INSERT INTO Veterinarios (Vet_Nome, Vet_Senha, Vet_Nascimento, Vet_Email) VALUES ( '"+ Vet_Nome +"', MD5('" + Vet_Senha + "'), '" + Vet_Data + "', '" + Vet_Email + "');";
         sql = s.c_str();
 
 
         /* Create a transactional object. */
-        work W(C); 
+        work W(conn); 
 
         W.exec( sql );
         W.commit();
@@ -225,7 +171,7 @@ void insereVeterinario(string Vet_Nome, string Vet_Senha, string Vet_Data, strin
         return;
 
     
-    }catch (const std::exception &e){
+    } catch (const std::exception &e){
 
         cerr << e.what() << std::endl;
 
@@ -235,32 +181,18 @@ void insereVeterinario(string Vet_Nome, string Vet_Senha, string Vet_Data, strin
 
 }
 
-void removeVeterinario(string Vet_Nome) {
+void Backend::removeVeterinario(string Vet_Nome) {
 
     const char * sql;
     string s;
 
     try{
-
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database..." << endl;
-            return;
-
-        }
-
         s = "UPDATE Veterinarios SET Vet_Ativo = FALSE WHERE Vet_Nome = '"+ Vet_Nome +"';";
         sql = s.c_str();
 
 
         /* Create a transactional object. */
-        work W(C); 
+        work W(conn); 
 
         W.exec( sql );
         W.commit();
@@ -282,26 +214,13 @@ void removeVeterinario(string Vet_Nome) {
 
 }
 
-bool loginAdministrador(const string &Adm_Nome, const string &Adm_Senha) {
+bool Backend::loginAdministrador(const string &Adm_Nome, const string &Adm_Senha) {
     try {
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database..." << endl;
-            return false;
-
-        }
-
-        C.prepare("check_admin",
+        conn.prepare("check_admin",
                   "SELECT COUNT(*) FROM Administradores "
                   "WHERE Adm_Ativo = TRUE AND Adm_Senha = MD5($1) AND Adm_Nome = $2");
 
-        work W(C);
+        work W(conn);
 
         result r = W.exec_prepared("check_admin", Adm_Senha, Adm_Nome);
 
@@ -319,26 +238,13 @@ bool loginAdministrador(const string &Adm_Nome, const string &Adm_Senha) {
     }
 }
 
-bool loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) {
+bool Backend::loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) {
     try {
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database..." << endl;
-            return false;
-
-        }
-
-        C.prepare("check_admin",
+        conn.prepare("check_admin",
                   "SELECT COUNT(*) FROM Funcionarios "
                   "WHERE Fun_Ativo = TRUE AND Fun_Senha = MD5($1) AND Fun_Nome = $2");
 
-        work W(C);
+        work W(conn);
 
         result r = W.exec_prepared("check_admin", Fun_Senha, Fun_Nome);
 
@@ -356,26 +262,13 @@ bool loginFuncionario(const string &Fun_Nome, const string &Fun_Senha) {
     }
 }
 
-bool loginVeterinario(const string &Vet_Nome, const string &Vet_Senha) {
+bool Backend::loginVeterinario(const string &Vet_Nome, const string &Vet_Senha) {
     try {
-        connection C("dbname=banco user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
-
-        if (C.is_open()) {
-
-            cout << "Opened database successfully! " << C.dbname() << endl;
-
-        } else {
-
-            cout << "Can't open database..." << endl;
-            return false;
-
-        }
-
-        C.prepare("check_admin",
+        conn.prepare("check_admin",
                   "SELECT COUNT(*) FROM veterinarios "
                   "WHERE Vet_Ativo = TRUE AND Vet_Senha = MD5($1) AND Vet_Nome = $2");
 
-        work W(C);
+        work W(conn);
 
         result r = W.exec_prepared("check_admin", Vet_Senha, Vet_Nome);
 

@@ -46,6 +46,7 @@ int main() {
     backend.removeVeterinario("Antonio Manso Pacífico de Oliveira Sossegado");
     //a remoção de um veterinário não apaga o registro;
 
+    
     cout << backend.loginAdministrador("Aeronautics Barata", "WLEF7YTE") << endl; // falha por existir registro, mas ele estar como "inativo", administrador ja removido;
     cout << backend.loginFuncionario("Lança Perfume Rodometálico de Andrade", "ERRADAERRADAERRADA") << endl; // falha por estar com a senha incorreta;
     cout << backend.loginVeterinario("Dolores Fuertes de Barriga", "juyu77urtfg") << endl; // ocorre corretamente;

@@ -9,12 +9,13 @@
 <body>
 
     <main class="caixa-login">
-        <form action="#"> <h1>Acesso ao Sistema</h1>
-            <p>Bem-vindo ao painel de gerenciamento da granja UTFPR-TD</p>
+        <form id="formulario-login">
+            <h1>Acesso ao Sistema</h1>
+            <p>Bem-vindo ao painel de gerenciamento da sua granja.</p>
             
             <div class="grupo-formulario">
-                <label for="email">Email</label>
-                <input type="text" id="email" name="email" placeholder="Digite seu email" required>
+                <label for="id-granja">ID ou Nome da Granja</label>
+                <input type="text" id="id-granja" name="id-granja" placeholder="Digite seu ID" required>
             </div>
             
             <div class="grupo-formulario">
@@ -22,13 +23,12 @@
                 <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
             </div>
             
-            <button type="submit">Entrar</button>
-
-            <div class="links-adicionais">
-                <a href="#">Esqueceu sua senha?</a>
-            </div>
-        </form>
+            <button type="submit" id="botao-login">Entrar</button>   
+                     
+            </form>
     </main>
+
+    <script src="js/login.js"></script>
 
 </body>
 </html>

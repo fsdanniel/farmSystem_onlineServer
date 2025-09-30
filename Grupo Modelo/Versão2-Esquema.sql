@@ -1,8 +1,17 @@
--- Fase 0:
-
-DROP TABLE IF EXISTS Administradores;
-DROP TABLE IF EXISTS Funcionarios;
+DROP TABLE IF EXISTS Nutricao_Machos;
+DROP TABLE IF EXISTS Nutricao_Lotes;
+DROP TABLE IF EXISTS Nutricao_Matrizes;
+DROP TABLE IF EXISTS Suprimentos;
+DROP TABLE IF EXISTS Machos;
+DROP TABLE IF EXISTS Creche;
+DROP TABLE IF EXISTS Maternidade;
+DROP TABLE IF EXISTS Gestacoes;
+DROP TABLE IF EXISTS Lotes;
+DROP TABLE IF EXISTS Matrizes;
+DROP TABLE IF EXISTS Geneticas;
 DROP TABLE IF EXISTS Veterinarios;
+DROP TABLE IF EXISTS Funcionarios;
+DROP TABLE IF EXISTS Administradores;
 
 CREATE TABLE Administradores
 (
@@ -40,68 +49,41 @@ CREATE TABLE Veterinarios
     PRIMARY KEY (Vet_Nome, Vet_Email)
 );
 
-SELECT * FROM Administradores;
-SELECT * FROM Funcionarios;
-SELECT * FROM Veterinarios;
-
-DELETE FROM Administradores;
-DELETE FROM Funcionarios;
-DELETE FROM Veterinarios;
-
--- Fase 1:
-
-DROP TABLE IF EXISTS Geneticas;
-DROP TABLE IF EXISTS Matrizes;
-DROP TABLE IF EXISTS Lotes;
-
 CREATE TABLE Geneticas
 (
-	Gen_Id SERIAL UNIQUE,
-	Gen_Nome character varying UNIQUE,
-	Gen_Descricao character varying NULL,
-	
-	PRIMARY KEY(Gen_Nome)
+	Gen_Id SERIAL PRIMARY KEY,
+	Gen_Nome character varying,
+	Gen_Descricao character varying NULL
 );
 
 CREATE TABLE Matrizes
 (
-	Mat_Id BIGSERIAL UNIQUE,
+	Mat_Id BIGSERIAL PRIMARY KEY,
 	Mat_Nascimento DATE,
-	Mat_Gen SERIAL UNIQUE,
-	Mat_Ativo BOOLEAN DEFAULT TRUE,
+	Mat_Gen SERIAL,
+	Mat_Saida DATE NULL,
 
-	PRIMARY KEY(Mat_Id, Mat_Nascimento),
 	FOREIGN KEY (Mat_Gen) REFERENCES Geneticas(Gen_Id)
 );
 
 CREATE TABLE Lotes
 (
-	Lot_Id BIGSERIAL UNIQUE,
-	Lot_Matriz BIGSERIAL UNIQUE NOT NULL,
-	Lot_Nascimento DATE NOT NULL,
+	Lot_Id BIGSERIAL,
+	Lot_Matriz BIGSERIAL,
+	Lot_Nascimento DATE,
 	Lot_Quantidade INT NOT NULL,
-	Lot_Ativo BOOLEAN DEFAULT TRUE,
-	
+	Lot_Saida DATE NULL,
+
+	PRIMARY KEY (Lot_Id),
 	FOREIGN KEY (Lot_Matriz) REFERENCES Matrizes(Mat_Id)
 );
-
-DELETE FROM Geneticas;
-DELETE FROM Edificios;
-DELETE FROM Matrizes;
-DELETE FROM Lotes;
-
--- Fase 2:
-
-DROP TABLE IF EXISTS Gestacoes;
-DROP TABLE IF EXISTS Maternidade;
-DROP TABLE IF EXISTS Creche;
 
 CREATE TABLE Gestacoes
 (
 	Gest_Matriz BIGSERIAL,
 	Gest_DataInicio DATE,
 	Gest_Genetica SERIAL,
-	Gest_Ativo BOOLEAN DEFAULT TRUE,
+	Gest_DataFinal DATE NULL,
 
 	PRIMARY KEY (Gest_Matriz, Gest_DataInicio),
 	FOREIGN KEY (Gest_Matriz) REFERENCES Matrizes (Mat_Id),
@@ -111,35 +93,31 @@ CREATE TABLE Gestacoes
 CREATE TABLE Maternidade
 (
 	Mater_Matriz BIGSERIAL,
-	Mater_DataInicio DATE,
+	Mater_DataEntrada DATE,
 	Mater_Lote BIGSERIAL,
-	Mater_Ativo BOOLEAN DEFAULT TRUE,
+	Mater_DataSaida DATE NULL,
 
-	PRIMARY KEY (Mater_Matriz, Mater_DataInicio),
+	PRIMARY KEY (Mater_Matriz, Mater_DataEntrada),
 	FOREIGN KEY (Mater_Matriz) REFERENCES Matrizes (Mat_Id),
 	FOREIGN KEY (Mater_Matriz) REFERENCES Lotes (Lot_Id)
 );
 
 CREATE TABLE Creche
 (
-	Cre_Lotes BIGSERIAL,
+	Cre_Lote BIGSERIAL,
 	Cre_DataEntrada DATE,
-	Cre_Ativo BOOLEAN DEFAULT TRUE,
+	Cre_DataSaida DATE NULL,
 	
-	PRIMARY KEY (Cre_Lotes, Cre_DataEntrada),
-	FOREIGN KEY (Cre_Lotes) REFERENCES Lotes (Lot_Id)
-	
+	PRIMARY KEY (Cre_Lote, Cre_DataEntrada),
+	FOREIGN KEY (Cre_Lote) REFERENCES Lotes (Lot_Id)
 );
-
--- fase 3:
--- Nutricao, Machos
 
 CREATE TABLE Machos
 (
 	Macho_Id BIGSERIAL UNIQUE,
 	Macho_Nascimento DATE UNIQUE,
 	Macho_Genetica SERIAL,
-	Macho_Ativo BOOLEAN DEFAULT TRUE,
+	Macho_Saida DATE NULL,
 
 	PRIMARY KEY (Macho_Id, Macho_Nascimento),
 	FOREIGN KEY (Macho_Genetica) REFERENCES Geneticas (Gen_Id)
@@ -190,12 +168,6 @@ CREATE TABLE Nutricao_Machos
 	FOREIGN KEY (NutriMachos_Suprimento) REFERENCES Suprimentos (Sup_Id),
 	FOREIGN KEY (NutriMachos_Macho_Id) REFERENCES Machos (Macho_Id)
 );
-
-DROP TABLE IF EXISTS Machos;
-DROP TABLE IF EXISTS Suprimentos;
-DROP TABLE IF EXISTS Nutricao_Matrizes;
-DROP TABLE IF EXISTS Nutricao_Lotes;
-DROP TABLE IF EXISTS Nutricao_Machos;
 
 -- fase 4:
 -- estatisticas

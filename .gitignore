@@ -91,4 +91,6 @@ dkms.conf
 # Compiled Static libraries
 *.lai
 
-# Executables
+node_modules/
+npm-debug.log
+.DS_Store

@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "tipo": "parto",
+    "data": "2025-03-01",
+    "animal": "Vaca 21",
+    "funcionarioId": "f001"
+  },
+  {
+    "id": 2,
+    "tipo": "desmame",
+    "data": "2025-05-15",
+    "animal": "Vaca 21",
+    "funcionarioId": "f002"
+  }
+]

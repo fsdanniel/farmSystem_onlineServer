@@ -1,0 +1,31 @@
+Task #19491: Registrar Coberturas/Inseminações, Partos, Desmames e Casos de Mortalidade
+
+Esta tarefa está relacionada ao controle reprodutivo e sanitário dos animais. Para isso, foram criados os seguintes arquivos:
+eventoRouter.js: Define as rotas para registrar e listar os eventos reprodutivos e sanitários (como coberturas, inseminações, partos e desmames). Ele possui as rotas POST /eventos (para registrar eventos) e GET /eventos (para listar os eventos registrados).
+eventoService.js: Contém a lógica de negócios para registrar e listar os eventos, manipulando o arquivo eventos.json para armazenar as informações de forma persistente.
+data/eventos.json: Armazena os dados dos eventos registrados, como tipo de evento, data, animal envolvido e o responsável.
+README.md: Documento com a descrição das requisições do sistema, incluindo a parte de eventos, com a tabela que lista as rotas de registrar e listar eventos.
+
+Task #19492: Registrar e Gerenciar Lotes de Animais
+
+Esta tarefa se refere ao gerenciamento de lotes de animais, permitindo registrar novos lotes, consultar, atualizar e remover lotes. Os arquivos envolvidos são:
+loteRouter.js: Define as rotas para manipulação dos lotes. Ele contém as rotas POST /lotes (para registrar novos lotes), GET /lotes (para listar os lotes cadastrados), PUT /lotes/:id (para atualizar um lote) e DELETE /lotes/:id (para remover um lote).
+loteService.js: Responsável pela manipulação dos dados dos lotes. Ele lê e escreve os dados no arquivo lotes.json, registrando, atualizando ou removendo os lotes conforme solicitado pelas rotas.
+data/lotes.json: Armazena os lotes de animais, com informações como nome, quantidade e espécie dos animais no lote, além do ID do funcionário responsável.
+README.md: Descreve as rotas associadas aos lotes, incluindo a tabela com informações sobre como consultar e manipular os lotes de animais.
+
+Task #19493: Alterar, Excluir e Editar Dados dos Lotes e Setores
+
+Esta tarefa tem o objetivo de editar e excluir dados de lotes e setores, como berçário, creche e maternidade. Os arquivos para esta tarefa são:
+setorRouter.js: Define as rotas PUT /setores/:id (para editar um setor) e DELETE /setores/:id (para excluir um setor).
+setorService.js: Contém a lógica para alterar ou excluir setores, garantindo que as modificações sejam refletidas no arquivo setores.json.
+data/setores.json: Armazena os dados dos setores (como berçário e maternidade), incluindo o nome do setor e o responsável por ele.
+README.md: A tabela de requisições inclui as rotas para alterar e remover setores, permitindo que o professor entenda as operações envolvidas.
+
+Task #19494: Consultar Relatórios de Partos e Desmames
+
+Esta tarefa envolve a consulta de relatórios sobre partos e desmames de animais. Os arquivos para essa funcionalidade são:
+relatorioRouter.js: Define as rotas GET /relatorios (para listar todos os relatórios de partos e desmames) e GET /relatorios/:funcionarioId (para consultar relatórios específicos de um funcionário).
+relatorioService.js: Contém a lógica para manipular os relatórios de partos e desmames, filtrando-os por funcionário quando necessário, e retornando os dados para as rotas.
+data/relatorios.json: Armazena os dados dos relatórios, com informações sobre os partos e desmames realizados, incluindo data, animal e funcionário responsável.
+README.md: O documento explica as rotas para consultar relatórios, com tabelas que descrevem as entradas e saídas de cada requisição.

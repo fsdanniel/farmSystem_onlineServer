@@ -7,12 +7,12 @@ Permite que o funcionário visualize relatórios sobre partos e desmames cadastr
 
 ## Rotas Implementadas
 
-### 🔹 Listar todos os relatórios
+### Listar todos os relatórios
 **Endpoint:** `GET /relatorios`  
 **Descrição:** Retorna todos os relatórios de partos e desmames registrados.  
 **Retorno:** JSON
 
-### 🔹 Listar relatórios de um funcionário específico
+### Listar relatórios de um funcionário específico
 **Endpoint:** `GET /relatorios/:funcionarioId`  
 **Descrição:** Retorna apenas os relatórios associados ao funcionário informado.  
 **Parâmetro:** `funcionarioId`  

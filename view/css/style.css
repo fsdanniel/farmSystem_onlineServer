@@ -1,12 +1,12 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+/*
+  Arquivo: css/style.css
+  Este arquivo agora contém APENAS os estilos específicos da página de login.
+  Os estilos de body, botões e formulários vêm do global.css
+*/
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: #f0f2f5; 
+    /* O body global tem o fundo cinza, mas o login
+       precisa centralizar o conteúdo. */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,7 +14,7 @@ body {
 }
 
 .caixa-login {
-    background-color: #ffffff;
+    background-color: var(--cor-fundo-card); /* Usando variável global */
     padding: 40px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -25,66 +25,25 @@ body {
 
 h1 {
     margin-bottom: 10px;
-    color: #333;
+    color: var(--cor-texto); /* Usando variável global */
 }
 
 .caixa-login p {
     margin-bottom: 30px;
-    color: #666;
+    color: var(--cor-texto-claro); /* Usando variável global */
 }
 
+/* REMOVIDO: *, body, .grupo-formulario, input, button
+   Eles agora são globais!
+*/
 
-.grupo-formulario {
-    margin-bottom: 20px;
-    text-align: left;
-}
-
-.grupo-formulario label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #555;
-}
-
-.grupo-formulario input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-.grupo-formulario input:focus {
-    outline: none;
-    border-color: #007bff; 
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-
-button {
-    width: 100%;
-    padding: 12px;
-    background-color: #28a745; 
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #218838; 
-}
-
-
+/* Links adicionais (se você os tiver) */
 .links-adicionais {
     margin-top: 20px;
 }
 
 .links-adicionais a {
-    color: #007bff;
+    color: var(--cor-info); /* Usando variável global */
     text-decoration: none;
     font-size: 14px;
 }

@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const senhaInput = document.getElementById('senha');
     const botaoLogin = document.getElementById('botao-login');
 
-    const idCerto = 'granja01';
-    const senhaCerta = 'senha123';
+    const idCerto = 'admin';
+    const senhaCerta = 'granja123';
 
     form.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
         botaoLogin.textContent = 'Entrando...';
 
         setTimeout(() => {
-            if (idGranja === idCerto && senha === SENHA_CORRETA) {
+            if (idGranja === idCerto && senha === senhaCerta) {
                 alert('Login realizado com sucesso!');
                 
-                window.location.href = 'dashboard.html'; 
+                window.location.href = 'app.html'; 
             } else {
                 alert('ID da Granja ou Senha incorretos. Tente novamente.');
 

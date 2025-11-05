@@ -1,3 +1,17 @@
+DROP TABLE IF EXISTS contratoFornecimento;
+DROP TABLE IF EXISTS fornecedores;
+DROP TABLE IF EXISTS administradores;
+DROP TABLE IF EXISTS ocorrencias;
+DROP TABLE IF EXISTS veterinarios;
+DROP TABLE IF EXISTS funcionarios;
+DROP TABLE IF EXISTS bercario;
+DROP TABLE IF EXISTS maternidade;
+DROP TABLE IF EXISTS inseminacao;
+DROP TABLE IF EXISTS eventos;
+DROP TABLE IF EXISTS insumos;
+DROP TABLE IF EXISTS geneticas;
+DROP TABLE IF EXISTS lotes;
+
 DROP TYPE IF EXISTS TYPE_LOTESTATUS;
 DROP TYPE IF EXISTS TYPE_OCORRTIPO;
 DROP TYPE IF EXISTS TYPE_OCORRPRIORIDADE;
@@ -20,14 +34,47 @@ CREATE TYPE TYPE_BERSTATUS AS ENUM ('ativo', 'desmamado', 'transferido');
 CREATE TYPE TYPE_MATERSTATUS AS ENUM ('gestante', 'lactante', 'disponivel', 'recuperacao');
 CREATE TYPE TYPE_INSEMRESULTADO AS ENUM ('aguardando', 'positivo', 'negativo');
 
-DROP TABLE IF EXISTS bercario;
-DROP TABLE IF EXISTS maternidade;
-DROP TABLE IF EXISTS inseminacao;
-DROP TABLE IF EXISTS eventos;
-DROP TABLE IF EXISTS insumos;
-DROP TABLE IF EXISTS geneticas;
-DROP TABLE IF EXISTS lotes;
-DROP TABLE IF EXISTS ocorrencias;
+CREATE TABLE fornecedores (
+    forn_id BIGSERIAL PRIMARY KEY,
+    forn_nome VARCHAR(50) NOT NULL,
+    forn_cnpj VARCHAR(30) NOT NULL,
+    forn_contato VARCHAR(30) NOT NULL,
+	forn_ativo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE contratoFornecimento(
+	con_id BIGSERIAL PRIMARY KEY,
+	con_fornId BIGINT NOT NULL REFERENCES fornecedores(forn_Id),
+	con_descricao VARCHAR(150),
+	con_dataInicio DATE,
+	con_dataFIM DATE,
+	con_valorTotal FLOAT4,
+	con_status BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE administradores (
+	adm_id BIGSERIAL PRIMARY KEY,
+	adm_nome VARCHAR(50) UNIQUE NOT NULL,
+	adm_senha VARCHAR(25) NOT NULL,
+	adm_email VARCHAR(50) NOT NULL,
+	adm_ativo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE veterinarios (
+	vet_id BIGSERIAL PRIMARY KEY,
+	vet_nome VARCHAR(50) UNIQUE NOT NULL,
+	vet_senha VARCHAR(25) NOT NULL,
+	vet_email VARCHAR(50) NOT NULL,
+	vet_ativo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE funcionarios (
+	fun_id BIGSERIAL PRIMARY KEY,
+	fun_nome VARCHAR(50) UNIQUE NOT NULL,
+	fun_senha VARCHAR(25) NOT NULL,
+	fun_email VARCHAR(50) NOT NULL,
+	fun_ativo BOOLEAN DEFAULT TRUE
+);
 
 CREATE TABLE geneticas (
 	gen_id BIGSERIAL PRIMARY KEY, 
@@ -100,10 +147,11 @@ CREATE TABLE ocorrencias (
 	ocor_tipo TYPE_OCORRTIPO,
 	ocor_prioridade TYPE_OCORRPRIORIDADE,
 	ocor_status TYPE_OCORRSTATUS,
-	ocor_veterinario BIGSERIAL,
+	ocor_veterinario VARCHAR(50) NOT NULL,
 	ocor_registro BOOLEAN DEFAULT TRUE,
 
-	FOREIGN KEY (ocor_lote) REFERENCES lotes(lote_id)
+	FOREIGN KEY (ocor_lote) REFERENCES lotes(lote_id),
+	FOREIGN KEY (ocor_veterinario) REFERENCES veterinarios(vet_nome)
 );
 
 CREATE TABLE eventos (

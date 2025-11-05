@@ -1,18 +1,14 @@
-// Arquivo: js/app.js
-// VERSÃO 2.2 (Corrigindo o bug da Gestão de Tarefas)
-// Este é o seu app.js estável, com apenas uma linha adicionada.
-
 "use strict";
 
-// === VARIÁVEIS GLOBAIS ===
+// VARIÁVEIS GLOBAIS 
 let acaoParaConfirmar = { callback: null };
 
-// === SELETORES GLOBAIS (para Modais) ===
+// SELETORES GLOBAIS (para Modais)
 let modalConfirmacao, btnConfirmarAcao, btnCancelarAcao, confirmacaoMensagem;
 let modalNotificacao, btnOkNotificacao, notificacaoMensagem, notificacaoTitulo;
 
 
-// === INICIALIZAÇÃO (O "CÉREBRO" DO APP) ===
+// INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', function () {
     // Capturar seletores dos modais globais
     modalConfirmacao = document.getElementById('modal-confirmacao');
@@ -24,14 +20,14 @@ document.addEventListener('DOMContentLoaded', function () {
     notificacaoMensagem = document.getElementById('notificacao-mensagem');
     notificacaoTitulo = document.getElementById('notificacao-titulo');
 
-    // Listeners dos modais globais (definidos aqui)
+    // Listeners dos modais globais
     if (btnConfirmarAcao) btnConfirmarAcao.addEventListener('click', handleConfirmarAcao);
     if (btnCancelarAcao) btnCancelarAcao.addEventListener('click', fecharModalConfirmacao);
     if (btnOkNotificacao) btnOkNotificacao.addEventListener('click', fecharModalNotificacao);
     if (modalConfirmacao) modalConfirmacao.addEventListener('click', (e) => { if (e.target === modalConfirmacao) fecharModalConfirmacao() });
     if (modalNotificacao) modalNotificacao.addEventListener('click', (e) => { if (e.target === modalNotificacao) fecharModalNotificacao() });
 
-    // ADICIONADO: Listener do botão Sair (Logout)
+    // Listener do botão Sair (Logout)
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
@@ -50,9 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 async function mainApp() {
 
-    // -----------------------------------------------------------------
     // PASSO 1 - VERIFICAR SEGURANÇA E OBTER PERFIL
-    // -----------------------------------------------------------------
     const perfilLogado = localStorage.getItem('perfilUsuario');
     const nomeUsuario = localStorage.getItem('nomeUsuario');
 
@@ -65,16 +59,11 @@ async function mainApp() {
     // Funções de inicialização
     inicializarNavegacao();
 
-    // -----------------------------------------------------------------
     // PASSO 2 - APLICAR PERMISSÕES
-    // -----------------------------------------------------------------
     aplicarPermissoes(perfilLogado, nomeUsuario);
 
-    // -----------------------------------------------------------------
     // PASSO 3 - INICIALIZAR MÓDULOS
-    // -----------------------------------------------------------------
     try {
-        // (Funções do veterinario.js - Esta parte está correta no seu ficheiro)
         await carregarGeneticas();
         await carregarLotes();
         await carregarOcorrencias();
@@ -88,13 +77,10 @@ async function mainApp() {
         inicializarModuloRegistros(); // (definido em registros.js - síncrono)
         inicializarModuloRelatorios();  // (definido em relatorios.js - síncrono)
 
-        // *** A CORREÇÃO ESTÁ AQUI ***
-        // Estas 3 linhas estavam em falta no seu app.js
         await inicializarModuloUsuarios();   // (definido em usuarios.js)
         await inicializarModuloFinanceiro(); // (definido em financeiro.js)
         await inicializarModuloTarefas();    // (definido em tarefas.js)
         await inicializarModuloContratos();   // (definido em tarefas.js)
-        // *** FIM DA CORREÇÃO ***
 
         // Configurar listeners (definidos em veterinario.js)
         configurarFiltros();
@@ -104,14 +90,12 @@ async function mainApp() {
 
     } catch (error) {
         console.error("Erro ao inicializar módulos:", error);
-        // (Este é o erro que você viu, causado pelas chamadas em falta)
         mostrarNotificacao("Erro Crítico", "Falha ao carregar dados. Recarregue a página.");
     }
 }
 
 
-// === NAVEGAÇÃO E PERMISSÕES ===
-// (Nenhuma alteração nesta secção)
+// NAVEGAÇÃO E PERMISSÕES
 function inicializarNavegacao() {
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
@@ -133,13 +117,13 @@ function inicializarNavegacao() {
 }
 
 function aplicarPermissoes(perfil, nome) {
-    // 1. Atualiza o nome do usuário no cabeçalho
+    // Atualiza o nome do usuário no cabeçalho
     const nomeHeader = document.getElementById('nome-usuario-header');
     if (nomeHeader) {
         nomeHeader.textContent = nome.charAt(0).toUpperCase() + nome.slice(1);
     }
 
-    // 2. Define o nome do Vet no formulário de ocorrência (se for o vet)
+    // Define o nome do Vet no formulário de ocorrência (se for o vet)
     if (perfil === 'veterinario') {
         if (typeof carregarDadosVeterinario === 'function') {
             carregarDadosVeterinario();
@@ -147,7 +131,7 @@ function aplicarPermissoes(perfil, nome) {
         }
     }
 
-    // 3. Filtra os links do menu lateral
+    // Filtra os links do menu lateral
     const linksMenu = document.querySelectorAll('.sidebar .nav-menu li');
     linksMenu.forEach(li => {
         const permissoesAttr = li.dataset.permissao;
@@ -161,7 +145,7 @@ function aplicarPermissoes(perfil, nome) {
         }
     });
 
-    // 4. Filtra as seções de conteúdo
+    // Filtra as seções de conteúdo
     const secoes = document.querySelectorAll('.section');
     secoes.forEach(section => {
         const permissoesAttr = section.dataset.permissao;
@@ -173,7 +157,7 @@ function aplicarPermissoes(perfil, nome) {
         }
     });
 
-    // 5. Ativa a *primeira* seção visível para o usuário
+    // Ativa a *primeira* seção visível para o usuário
     const primeiroLinkVisivel = document.querySelector('.sidebar .nav-menu li:not([style*="display: none"]) .nav-link');
 
     if (primeiroLinkVisivel) {
@@ -189,8 +173,7 @@ function aplicarPermissoes(perfil, nome) {
 }
 
 
-// === FUNÇÕES DE MODAIS GLOBAIS ===
-// (Nenhuma alteração nesta secção)
+// FUNÇÕES DE MODAIS GLOBAIS
 function fecharTodosModais() {
     if (typeof fecharModalGenetica === 'function') fecharModalGenetica();
     if (typeof fecharModalLote === 'function') fecharModalLote();
@@ -246,9 +229,7 @@ function handleConfirmarAcao() {
     fecharModalConfirmacao();
 }
 
-
-// === FUNÇÕES AUXILIARES GLOBAIS ===
-// (Nenhuma alteração nesta secção)
+// FUNÇÕES AUXILIARES GLOBAIS
 function formatarData(dataString) {
     if (!dataString) return '—';
     const [ano, mes, dia] = dataString.split('-');

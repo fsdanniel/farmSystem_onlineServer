@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. DADOS MOCADOS DOS USUÁRIOS
+    // DADOS MOCADOS DOS USUÁRIOS
     // (Simula nosso banco de dados de usuários com 3 perfis)
     const mockUsuarios = [
         { 
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
-    // 2. SELETORES DO DOM
+    // SELETORES DO DOM
     const form = document.getElementById('formulario-login');
     const idGranjaInput = document.getElementById('id-granja');
     const senhaInput = document.getElementById('senha');
@@ -32,20 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Novo seletor para o componente de erro (substitui o alert)
     const mensagemErro = document.getElementById('mensagem-erro');
 
-    // 3. FUNÇÃO AUXILIAR PARA MOSTRAR ERROS (Substitui o alert)
+    // FUNÇÃO AUXILIAR PARA MOSTRAR ERROS 
     function mostrarErro(mensagem) {
         // (Esta função espera que exista um <p id="mensagem-erro"> no HTML)
         if (mensagemErro) {
             mensagemErro.textContent = mensagem;
             mensagemErro.classList.add('visivel');
         } else {
-            // Fallback caso o HTML esteja errado (mas não deveríamos usar)
+            // Fallback caso o HTML esteja errado
             console.error("Elemento #mensagem-erro não encontrado. Fallback para alert.");
             alert(mensagem);
         }
     }
 
-    // 4. FUNÇÃO AUXILIAR PARA ESCONDER ERROS (Melhoria de UX)
+    // FUNÇÃO AUXILIAR PARA ESCONDER ERROS 
     function esconderErro() {
         if (mensagemErro) {
             mensagemErro.textContent = '';
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 5. LISTENER DE SUBMIT DO FORMULÁRIO (Lógica Principal)
+    // LISTENER DE SUBMIT DO FORMULÁRIO (Lógica Principal)
     form.addEventListener('submit', (event) => {
         event.preventDefault(); // Impede o recarregamento da página
         
@@ -90,12 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('nomeUsuario', usuarioEncontrado.nome);
 
                 // Redireciona para o dashboard principal
-                // (Assumindo que seu dashboard é o app.html)
                 window.location.href = 'app.html';
 
             } else {
                 // FALHA!
-                // (Substituindo o alert() pelo componente de tela)
                 mostrarErro('Usuário ou Senha incorretos. Tente novamente.');
                 
                 // Reabilita o botão
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000); // Atraso de 1 segundo
     });
 
-    // 6. MELHORIA DE UX: Esconde o erro quando o usuário voltar a digitar
+    // MELHORIA DE UX: Esconde o erro quando o usuário voltar a digitar
     idGranjaInput.addEventListener('input', esconderErro);
     senhaInput.addEventListener('input', esconderErro);
 });

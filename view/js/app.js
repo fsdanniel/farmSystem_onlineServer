@@ -80,7 +80,7 @@ async function mainApp() {
         await inicializarModuloUsuarios();   // (definido em usuarios.js)
         await inicializarModuloFinanceiro(); // (definido em financeiro.js)
         await inicializarModuloTarefas();    // (definido em tarefas.js)
-        await inicializarModuloContratos();   // (definido em tarefas.js)
+        await inicializarModuloContratos();   // (definido em contratos.js)
 
         // Configurar listeners (definidos em veterinario.js)
         configurarFiltros();

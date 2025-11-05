@@ -1,16 +1,15 @@
-DROP TABLE IF EXISTS contratoFornecimento;
 DROP TABLE IF EXISTS fornecedores;
-DROP TABLE IF EXISTS administradores;
 DROP TABLE IF EXISTS ocorrencias;
 DROP TABLE IF EXISTS veterinarios;
-DROP TABLE IF EXISTS funcionarios;
 DROP TABLE IF EXISTS bercario;
 DROP TABLE IF EXISTS maternidade;
 DROP TABLE IF EXISTS inseminacao;
 DROP TABLE IF EXISTS eventos;
-DROP TABLE IF EXISTS insumos;
 DROP TABLE IF EXISTS geneticas;
 DROP TABLE IF EXISTS lotes;
+DROP TABLE IF EXISTS insumos;
+DROP TABLE IF EXISTS MovimentacoesFinanceiras;
+DROP TABLE IF EXISTS usuarios;
 
 DROP TYPE IF EXISTS TYPE_LOTESTATUS;
 DROP TYPE IF EXISTS TYPE_OCORRTIPO;
@@ -21,6 +20,7 @@ DROP TYPE IF EXISTS TYPE_EVENTOS;
 DROP TYPE IF EXISTS TYPE_BERSTATUS;
 DROP TYPE IF EXISTS TYPE_MATERSTATUS;
 DROP TYPE IF EXISTS TYPE_INSEMRESULTADO;
+DROP TYPE IF EXISTS TYPE_USERTIPO;
 
 CREATE TYPE TYPE_LOTESTATUS AS ENUM ('ativo', 'inativo', 'quarentenado');
 CREATE TYPE TYPE_OCORRTIPO AS ENUM ('sanitaria', 'alimentacao', 'medicamento',
@@ -33,47 +33,25 @@ CREATE TYPE TYPE_EVENTOS AS ENUM ('cobertura/inseminacao', 'parto', 'desmame', '
 CREATE TYPE TYPE_BERSTATUS AS ENUM ('ativo', 'desmamado', 'transferido');
 CREATE TYPE TYPE_MATERSTATUS AS ENUM ('gestante', 'lactante', 'disponivel', 'recuperacao');
 CREATE TYPE TYPE_INSEMRESULTADO AS ENUM ('aguardando', 'positivo', 'negativo');
+CREATE TYPE TYPE_USERTIPO AS ENUM ('administrador', 'funcionario', 'veterinario');
 
-CREATE TABLE fornecedores (
-    forn_id BIGSERIAL PRIMARY KEY,
-    forn_nome VARCHAR(50) NOT NULL,
-    forn_cnpj VARCHAR(30) NOT NULL,
-    forn_contato VARCHAR(30) NOT NULL,
-	forn_ativo BOOLEAN DEFAULT TRUE
+CREATE TABLE insumos (
+	insu_id BIGSERIAL PRIMARY KEY,
+    insu_nome TYPE_INSUMOS NOT NULL,
+	insu_dataCompra DATE,
+	insu_quantidade FLOAT4 NOT NULL,
+	insu_nomeFornecedor VARCHAR(50),
+	insu_custoTotal FLOAT4,
+	insu_ativo BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE contratoFornecimento(
-	con_id BIGSERIAL PRIMARY KEY,
-	con_fornId BIGINT NOT NULL REFERENCES fornecedores(forn_Id),
-	con_descricao VARCHAR(150),
-	con_dataInicio DATE,
-	con_dataFIM DATE,
-	con_valorTotal FLOAT4,
-	con_status BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE administradores (
-	adm_id BIGSERIAL PRIMARY KEY,
-	adm_nome VARCHAR(50) UNIQUE NOT NULL,
-	adm_senha VARCHAR(25) NOT NULL,
-	adm_email VARCHAR(50) NOT NULL,
-	adm_ativo BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE veterinarios (
-	vet_id BIGSERIAL PRIMARY KEY,
-	vet_nome VARCHAR(50) UNIQUE NOT NULL,
-	vet_senha VARCHAR(25) NOT NULL,
-	vet_email VARCHAR(50) NOT NULL,
-	vet_ativo BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE funcionarios (
-	fun_id BIGSERIAL PRIMARY KEY,
-	fun_nome VARCHAR(50) UNIQUE NOT NULL,
-	fun_senha VARCHAR(25) NOT NULL,
-	fun_email VARCHAR(50) NOT NULL,
-	fun_ativo BOOLEAN DEFAULT TRUE
+CREATE TABLE usuarios (
+	user_id BIGSERIAL PRIMARY KEY,
+	user_nome VARCHAR(50) UNIQUE NOT NULL,
+	user_senha VARCHAR(25) NOT NULL,
+	user_email VARCHAR(50) NULL,
+	user_tipo TYPE_USERTIPO NOT NULL DEFAULT 'funcionario',
+	user_ativo BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE geneticas (
@@ -87,6 +65,7 @@ CREATE TABLE geneticas (
 CREATE TABLE lotes (
 	lote_id BIGSERIAL,
 	lote_nome VARCHAR(50) UNIQUE,
+	lote_genetica VARCHAR(50) NOT NULL REFERENCES geneticas(gen_nome), 
 	lote_quantidade INT,
 	lote_dataCriacao DATE,
 	lote_status TYPE_LOTESTATUS NOT NULL DEFAULT 'ativo',
@@ -130,15 +109,6 @@ CREATE TABLE inseminacao (
 	FOREIGN KEY (insem_geneticaMacho) REFERENCES geneticas (gen_id)
 );
 
-CREATE TABLE insumos (
-	insu_id BIGSERIAL PRIMARY KEY,
-    insu_nome TYPE_INSUMOS NOT NULL,
-	insu_dataCompra DATE,
-	insu_quantidade FLOAT4,
-	insu_nomeFornecedor VARCHAR(50),
-	insu_custoTotal FLOAT4
-);
-
 CREATE TABLE ocorrencias (
 	ocor_id BIGSERIAL PRIMARY KEY,
 	ocor_data DATE,
@@ -147,11 +117,11 @@ CREATE TABLE ocorrencias (
 	ocor_tipo TYPE_OCORRTIPO,
 	ocor_prioridade TYPE_OCORRPRIORIDADE,
 	ocor_status TYPE_OCORRSTATUS,
-	ocor_veterinario VARCHAR(50) NOT NULL,
+	ocor_user VARCHAR(50) NOT NULL,
 	ocor_registro BOOLEAN DEFAULT TRUE,
 
 	FOREIGN KEY (ocor_lote) REFERENCES lotes(lote_id),
-	FOREIGN KEY (ocor_veterinario) REFERENCES veterinarios(vet_nome)
+	FOREIGN KEY (ocor_user) REFERENCES usuarios(user_nome)
 );
 
 CREATE TABLE eventos (

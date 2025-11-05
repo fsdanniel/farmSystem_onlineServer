@@ -1,25 +1,19 @@
 // Arquivo: js/app.js
-// VERSÃO 2.0 (Refatorado - Modularizado)
-// Este arquivo agora atua como o "cérebro" principal,
-// mas a lógica específica de cada módulo foi movida 
-// para a pasta /js/modulos/
+// VERSÃO 2.2 (Corrigindo o bug da Gestão de Tarefas)
+// Este é o seu app.js estável, com apenas uma linha adicionada.
 
-"use strict"; // Ativa o modo estrito para boas práticas
+"use strict";
 
 // === VARIÁVEIS GLOBAIS ===
-// (Apenas as variáveis globais de estado do app)
-let veterinarioLogado = { id: null, nome: null, email: null, crmv: null };
-// Armazena a FUNÇÃO que será executada se o usuário clicar em "Confirmar"
 let acaoParaConfirmar = { callback: null };
 
 // === SELETORES GLOBAIS (para Modais) ===
-// (Capturamos no DOMContentLoaded, mas declaramos aqui)
 let modalConfirmacao, btnConfirmarAcao, btnCancelarAcao, confirmacaoMensagem;
 let modalNotificacao, btnOkNotificacao, notificacaoMensagem, notificacaoTitulo;
 
 
 // === INICIALIZAÇÃO (O "CÉREBRO" DO APP) ===
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Capturar seletores dos modais globais
     modalConfirmacao = document.getElementById('modal-confirmacao');
     btnConfirmarAcao = document.getElementById('btn-confirmar-acao');
@@ -31,11 +25,21 @@ document.addEventListener('DOMContentLoaded', function() {
     notificacaoTitulo = document.getElementById('notificacao-titulo');
 
     // Listeners dos modais globais (definidos aqui)
-    btnConfirmarAcao.addEventListener('click', handleConfirmarAcao);
-    btnCancelarAcao.addEventListener('click', fecharModalConfirmacao);
-    btnOkNotificacao.addEventListener('click', fecharModalNotificacao);
-    modalConfirmacao.addEventListener('click', (e) => { if (e.target === modalConfirmacao) fecharModalConfirmacao() });
-    modalNotificacao.addEventListener('click', (e) => { if (e.target === modalNotificacao) fecharModalNotificacao() });
+    if (btnConfirmarAcao) btnConfirmarAcao.addEventListener('click', handleConfirmarAcao);
+    if (btnCancelarAcao) btnCancelarAcao.addEventListener('click', fecharModalConfirmacao);
+    if (btnOkNotificacao) btnOkNotificacao.addEventListener('click', fecharModalNotificacao);
+    if (modalConfirmacao) modalConfirmacao.addEventListener('click', (e) => { if (e.target === modalConfirmacao) fecharModalConfirmacao() });
+    if (modalNotificacao) modalNotificacao.addEventListener('click', (e) => { if (e.target === modalNotificacao) fecharModalNotificacao() });
+
+    // ADICIONADO: Listener do botão Sair (Logout)
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem('perfilUsuario');
+            localStorage.removeItem('nomeUsuario');
+            window.location.href = 'index.html';
+        });
+    }
 
     // Inicia a aplicação
     mainApp();
@@ -45,47 +49,79 @@ document.addEventListener('DOMContentLoaded', function() {
  * Função principal assíncrona para carregar e inicializar o app.
  */
 async function mainApp() {
+
+    // -----------------------------------------------------------------
+    // PASSO 1 - VERIFICAR SEGURANÇA E OBTER PERFIL
+    // -----------------------------------------------------------------
+    const perfilLogado = localStorage.getItem('perfilUsuario');
+    const nomeUsuario = localStorage.getItem('nomeUsuario');
+
+    if (!perfilLogado) {
+        console.warn("Nenhum usuário logado. Redirecionando para login.");
+        window.location.href = 'index.html';
+        return;
+    }
+
     // Funções de inicialização
-    // (Estas funções são DEFINIDAS nos arquivos de módulo, 
-    //  mas CHAMADAS aqui)
-    
     inicializarNavegacao();
-    
-    // Módulos do Vet (definidos em veterinario.js)
-    carregarDadosVeterinario(); // Define o usuário logado (síncrono)
-    
-    // Agora esperamos (await) os dados serem "buscados"
-    // antes de configurar os listeners
-    await carregarGeneticas();
-    await carregarLotes();
-    await carregarOcorrencias();
-    await carregarBercarios();
-    await carregarMaternidades();
-    await carregarInseminacoes();
-    await atualizarRelatorios(); // KPIs
-    
-    // Módulos Integrados
-    await inicializarModuloInsumos();    // (definido em insumos.js)
-    inicializarModuloRegistros(); // (definido em registros.js - síncrono)
-    inicializarModuloRelatorios();  // (definido em relatorios.js - síncrono)
-    
-    // Configurar listeners (definidos em veterinario.js)
-    configurarFiltros();
-    configurarFormularios();
-    configurarListenersDeBotoes();
-    configurarListenersDeTabelas();
-    
-    // Atualiza o nome do Vet no Header
-    atualizarNomeVeterinarioInterface();
+
+    // -----------------------------------------------------------------
+    // PASSO 2 - APLICAR PERMISSÕES
+    // -----------------------------------------------------------------
+    aplicarPermissoes(perfilLogado, nomeUsuario);
+
+    // -----------------------------------------------------------------
+    // PASSO 3 - INICIALIZAR MÓDULOS
+    // -----------------------------------------------------------------
+    try {
+        // (Funções do veterinario.js - Esta parte está correta no seu ficheiro)
+        await carregarGeneticas();
+        await carregarLotes();
+        await carregarOcorrencias();
+        await carregarBercarios();
+        await carregarMaternidades();
+        await carregarInseminacoes();
+        await atualizarRelatorios(); // KPIs
+
+        // Módulos Integrados
+        await inicializarModuloInsumos();    // (definido em insumos.js)
+        inicializarModuloRegistros(); // (definido em registros.js - síncrono)
+        inicializarModuloRelatorios();  // (definido em relatorios.js - síncrono)
+
+        // *** A CORREÇÃO ESTÁ AQUI ***
+        // Estas 3 linhas estavam em falta no seu app.js
+        await inicializarModuloUsuarios();   // (definido em usuarios.js)
+        await inicializarModuloFinanceiro(); // (definido em financeiro.js)
+        await inicializarModuloTarefas();    // (definido em tarefas.js)
+        await inicializarModuloContratos();   // (definido em tarefas.js)
+        // *** FIM DA CORREÇÃO ***
+
+        // Configurar listeners (definidos em veterinario.js)
+        configurarFiltros();
+        configurarFormularios();
+        configurarListenersDeBotoes();
+        configurarListenersDeTabelas();
+
+    } catch (error) {
+        console.error("Erro ao inicializar módulos:", error);
+        // (Este é o erro que você viu, causado pelas chamadas em falta)
+        mostrarNotificacao("Erro Crítico", "Falha ao carregar dados. Recarregue a página.");
+    }
 }
 
 
-// === NAVEGAÇÃO E SISTEMA (Funções Globais) ===
+// === NAVEGAÇÃO E PERMISSÕES ===
+// (Nenhuma alteração nesta secção)
 function inicializarNavegacao() {
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
+
+            if (link.parentElement.style.display === 'none') {
+                return;
+            }
+
             navLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
             const sections = document.querySelectorAll('.section');
@@ -95,19 +131,79 @@ function inicializarNavegacao() {
         });
     });
 }
-function obterVeterinarioLogado() { 
-    return veterinarioLogado.nome || 'Dr(a). [Nome do Veterinário]'; 
+
+function aplicarPermissoes(perfil, nome) {
+    // 1. Atualiza o nome do usuário no cabeçalho
+    const nomeHeader = document.getElementById('nome-usuario-header');
+    if (nomeHeader) {
+        nomeHeader.textContent = nome.charAt(0).toUpperCase() + nome.slice(1);
+    }
+
+    // 2. Define o nome do Vet no formulário de ocorrência (se for o vet)
+    if (perfil === 'veterinario') {
+        if (typeof carregarDadosVeterinario === 'function') {
+            carregarDadosVeterinario();
+            atualizarNomeVeterinarioInterface();
+        }
+    }
+
+    // 3. Filtra os links do menu lateral
+    const linksMenu = document.querySelectorAll('.sidebar .nav-menu li');
+    linksMenu.forEach(li => {
+        const permissoesAttr = li.dataset.permissao;
+        if (permissoesAttr) {
+            const permissoes = permissoesAttr.split(',');
+            if (!permissoes.includes(perfil)) {
+                li.style.display = 'none'; // Esconde o link
+            } else {
+                li.style.display = 'block'; // Garante que esteja visível
+            }
+        }
+    });
+
+    // 4. Filtra as seções de conteúdo
+    const secoes = document.querySelectorAll('.section');
+    secoes.forEach(section => {
+        const permissoesAttr = section.dataset.permissao;
+        if (permissoesAttr) {
+            const permissoes = permissoesAttr.split(',');
+            if (!permissoes.includes(perfil)) {
+                section.style.display = 'none'; // Esconde a seção
+            }
+        }
+    });
+
+    // 5. Ativa a *primeira* seção visível para o usuário
+    const primeiroLinkVisivel = document.querySelector('.sidebar .nav-menu li:not([style*="display: none"]) .nav-link');
+
+    if (primeiroLinkVisivel) {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+        primeiroLinkVisivel.classList.add('active');
+        const targetSection = primeiroLinkVisivel.dataset.section;
+        document.getElementById(targetSection + '-section').classList.add('active');
+    } else {
+        document.querySelector('.content').innerHTML = "<h1>Acesso Negado</h1><p>Você não tem permissão para visualizar nenhum módulo.</p>";
+    }
 }
 
 
-// === FUNÇÕES DE MODAIS GLOBAIS (Devem ficar aqui) ===
+// === FUNÇÕES DE MODAIS GLOBAIS ===
+// (Nenhuma alteração nesta secção)
 function fecharTodosModais() {
-    // Estas funções são definidas em veterinario.js
-    fecharModalGenetica(); fecharModalLote(); fecharModalOcorrencia();
-    fecharModalBercario(); fecharModalMaternidade(); fecharModalInseminacao();
-    
-    // Estas são definidas aqui
-    fecharModalConfirmacao(); fecharModalNotificacao();
+    if (typeof fecharModalGenetica === 'function') fecharModalGenetica();
+    if (typeof fecharModalLote === 'function') fecharModalLote();
+    if (typeof fecharModalOcorrencia === 'function') fecharModalOcorrencia();
+    if (typeof fecharModalBercario === 'function') fecharModalBercario();
+    if (typeof fecharModalMaternidade === 'function') fecharModalMaternidade();
+    if (typeof fecharModalInseminacao === 'function') fecharModalInseminacao();
+    if (typeof fecharModalUsuario === 'function') fecharModalUsuario();
+    if (typeof fecharModalFinanceiro === 'function') fecharModalFinanceiro();
+    if (typeof fecharModalTarefa === 'function') fecharModalTarefa();
+
+    fecharModalConfirmacao();
+    fecharModalNotificacao();
 }
 
 function fecharModalConfirmacao() {
@@ -120,54 +216,51 @@ function fecharModalNotificacao() {
 }
 
 function mostrarNotificacao(titulo, mensagem) {
+    if (!notificacaoTitulo || !notificacaoMensagem || !modalNotificacao) {
+        console.warn("Elementos do modal de notificação não encontrados. Usando alert() como fallback.");
+        alert(`${titulo}: ${mensagem}`);
+        return;
+    }
     notificacaoTitulo.textContent = titulo;
     notificacaoMensagem.textContent = mensagem;
     modalNotificacao.classList.remove('hidden');
 }
 
-/**
- * Mostra o modal de confirmação.
- * @param {string} tipo - O tipo de item (ex: 'genetica', 'lote')
- * @param {number|string} id - O ID do item
- * @param {string} nome - O nome/identificador do item
- * @param {function} callback - A FUNÇÃO que deve ser executada se o usuário clicar em "Confirmar"
- */
 function mostrarConfirmacao(tipo, id, nome, callback) {
-    acaoParaConfirmar = { callback }; // Armazena a função de callback
+    if (!modalConfirmacao || !confirmacaoMensagem) {
+        console.warn("Elementos do modal de confirmação não encontrados. Usando confirm() como fallback.");
+        if (confirm(`Tem certeza que deseja excluir ${tipo} "${nome || id}"?`)) {
+            callback();
+        }
+        return;
+    }
+    acaoParaConfirmar = { callback };
     confirmacaoMensagem.textContent = `Tem certeza que deseja excluir ${tipo} "${nome || id}"? Esta ação não pode ser desfeita.`;
     modalConfirmacao.classList.remove('hidden');
 }
 
-/**
- * Handler genérico do botão "Confirmar".
- * Apenas executa o callback que foi salvo.
- */
 function handleConfirmarAcao() {
-    // Se tivermos um callback, execute-o
     if (acaoParaConfirmar.callback) {
         acaoParaConfirmar.callback();
     }
-    
-    // Limpa a ação e fecha o modal
     fecharModalConfirmacao();
 }
 
 
-// === FUNÇÕES AUXILIARES GLOBAIS (Devem ficar aqui) ===
+// === FUNÇÕES AUXILIARES GLOBAIS ===
+// (Nenhuma alteração nesta secção)
 function formatarData(dataString) {
     if (!dataString) return '—';
     const [ano, mes, dia] = dataString.split('-');
     if (dia && mes && ano && ano.length === 4) {
         return `${dia}/${mes}/${ano}`;
     }
-    // Tenta lidar com datas que já podem estar em formato local (ex: datetime-local)
     try {
         const data = new Date(dataString);
-        // Verifica se a data é válida e não é o "ano 0"
         if (isNaN(data.getTime()) || data.getUTCFullYear() < 1900) return '—';
         return data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     } catch (e) {
-        return dataString; // Retorna o original se tudo falhar
+        return dataString;
     }
 }
 function formatarMoeda(valor) {

@@ -13,7 +13,7 @@
         <div class="header-content">
             <h1>Sistema de Gestão da Granja</h1>
             <div class="user-info">
-                <span class="user-name" id="nome-veterinario-header">Carregando...</span>
+                <span class="user-name" id="nome-usuario-header">Carregando...</span>
                 <button class="btn btn-danger" id="btn-logout">Sair</button>
             </div>
         </div>
@@ -22,25 +22,60 @@
     <main class="main-content">
         <nav class="sidebar">
             <ul class="nav-menu">
-                <li><a href="#relatorios" class="nav-link active" data-section="relatorios">Relatórios</a></li>
-                <li><a href="#geneticas" class="nav-link" data-section="geneticas">Genéticas</a></li>
-                <li><a href="#lotes" class="nav-link" data-section="lotes">Lotes</a></li>
-                <li><a href="#ocorrencias" class="nav-link" data-section="ocorrencias">Ocorrências</a></li>
-                <li><a href="#insumos" class="nav-link" data-section="insumos">Gestão de Insumos</a></li>
-                <li><a href="#registros" class="nav-link" data-section="registros">Registro de Eventos</a></li>
-                <li><a href="#bercario" class="nav-link" data-section="bercario">Berçário</a></li>
-                <li><a href="#maternidade" class="nav-link" data-section="maternidade">Maternidade</a></li>
-                <li><a href="#inseminacao" class="nav-link" data-section="inseminacao">Inseminação</a></li>
+                <li data-permissao="admin,veterinario,funcionario">
+                    <a href="#relatorios" class="nav-link" data-section="relatorios">Relatórios</a>
+                </li>
+                <li data-permissao="admin,veterinario">
+                    <a href="#geneticas" class="nav-link" data-section="geneticas">Genéticas</a>
+                </li>
+                <li data-permissao="admin,veterinario,funcionario">
+                    <a href="#lotes" class="nav-link" data-section="lotes">Lotes</a>
+                </li>
+                <li data-permissao="admin,veterinario">
+                    <a href="#ocorrencias" class="nav-link" data-section="ocorrencias">Ocorrências</a>
+                </li>
+                <li data-permissao="admin,funcionario">
+                    <a href="#insumos" class="nav-link" data-section="insumos">Gestão de Insumos</a>
+                </li>
+                <li data-permissao="admin,funcionario">
+                    <a href="#registros" class="nav-link" data-section="registros">Registro de Eventos</a>
+                </li>
+                <li data-permissao="admin,veterinario">
+                    <a href="#bercario" class="nav-link" data-section="bercario">Berçário</a>
+                </li>
+                <li data-permissao="admin,veterinario">
+                    <a href="#maternidade" class="nav-link" data-section="maternidade">Maternidade</a>
+                </li>
+                <li data-permissao="admin,veterinario">
+                    <a href="#inseminacao" class="nav-link" data-section="inseminacao">Inseminação</a>
+                </li>
+                
+                <li data-permissao="admin,funcionario">
+                    <a href="#tarefas" class="nav-link" data-section="tarefas">Gestão de Tarefas</a>
+                </li>
+                
+                <!-- NOVO LINK DE MENU -->
+                <li data-permissao="admin,veterinario,funcionario">
+                    <a href="#contratos" class="nav-link" data-section="contratos">Contratos</a>
+                </li>
+
+                <li data-permissao="admin">
+                    <a href="#usuarios" class="nav-link" data-section="usuarios">Gestão de Usuários</a>
+                </li>
+                <li data-permissao="admin">
+                    <a href="#financeiro" class="nav-link" data-section="financeiro">Financeiro</a>
+                </li>
             </ul>
         </nav>
 
         <section class="content">
 
-            <div id="relatorios-section" class="section active">
+            <!-- Seção Relatórios (Existente) -->
+            <div id="relatorios-section" class="section" data-permissao="admin,veterinario,funcionario">
+                <!-- (Conteúdo existente de Relatórios) -->
                 <div class="section-header">
                     <h2>Relatórios</h2>
                 </div>
-
                 <div class="reports-grid">
                     <div class="report-card"><h3>Genéticas Ativas</h3><div class="report-value" id="total-geneticas">0</div><p>Total de genéticas cadastradas</p></div>
                     <div class="report-card"><h3>Lotes Ativos</h3><div class="report-value" id="total-lotes">0</div><p>Total de lotes em produção</p></div>
@@ -51,10 +86,8 @@
                     <div class="report-card"><h3>Porcas Lactantes</h3><div class="report-value" id="total-porcas-lactantes">0</div><p>Porcas amamentando</p></div>
                     <div class="report-card"><h3>Inseminações Pendentes</h3><div class="report-value" id="total-inseminacoes-pendentes">0</div><p>Aguardando verificação</p></div>
                 </div>
-
                 <div class="card-painel" style="margin-top: 30px;">
                     <h2>Gerador de Relatórios</h2>
-                    
                     <div class="filters" id="filtroRelatorio">
                         <div class="grupo-formulario">
                             <label for="tipoRelatorio">Tipo de relatório:</label>
@@ -72,10 +105,8 @@
                              <label for="dataFim">Data final:</label>
                             <input type="date" id="dataFim" />
                         </div>
-                        
                         <button type="button" id="btnFiltrar" class="btn btn-primary" style="align-self: flex-end; width: auto; padding: 12px 24px;">Gerar Relatório</button>
                     </div>
-
                     <h3 style="margin-top: 30px;">Resultados</h3>
                     <div class="table-container">
                         <table class="data-table" id="tabelaResultados">
@@ -94,7 +125,9 @@
                     </div>
                 </div>
             </div>
-            <div id="geneticas-section" class="section">
+
+            <!-- Seção Genéticas (Existente) -->
+            <div id="geneticas-section" class="section" data-permissao="admin,veterinario">
                 <div class="section-header">
                     <h2>Gerenciamento de Genéticas</h2>
                     <button class="btn btn-primary" id="btn-abrir-modal-genetica">Nova Genética</button>
@@ -123,7 +156,8 @@
                 </div>
             </div>
 
-            <div id="lotes-section" class="section">
+            <!-- Seção Lotes (Existente) -->
+            <div id="lotes-section" class="section" data-permissao="admin,veterinario,funcionario">
                 <div class="section-header">
                     <h2>Gerenciamento de Lotes</h2>
                     <button class="btn btn-primary" id="btn-abrir-modal-lote">Novo Lote</button>
@@ -157,7 +191,8 @@
                 </div>
             </div>
 
-            <div id="ocorrencias-section" class="section">
+            <!-- Seção Ocorrências (Existente) -->
+            <div id="ocorrencias-section" class="section" data-permissao="admin,veterinario">
                 <div class="section-header">
                     <h2>Ocorrências e Atualizações de Lotes</h2>
                     <button class="btn btn-primary" id="btn-abrir-modal-ocorrencia">Nova Ocorrência</button>
@@ -193,7 +228,8 @@
                 </div>
             </div>
 
-            <div id="insumos-section" class="section">
+            <!-- Seção Insumos (Existente) -->
+            <div id="insumos-section" class="section" data-permissao="admin,funcionario">
                 <div class="section-header">
                     <h2>Gestão de Insumos e Estoque</h2>
                 </div>
@@ -208,7 +244,8 @@
                             <div class="grupo-formulario"><label for="compra-custo">Custo Total (R$)</label><input type="number" id="compra-custo" min="0.01" step="0.01" placeholder="Ex: 1500.00"></div>
                             <button type="submit" id="botao-registrar" class="btn btn-primary">Registrar Compra</button>
                         </form>
-                    </div> <div class="card-painel">
+                    </div> 
+                    <div class="card-painel">
                         <h2>Consulta de Estoque e Histórico</h2>
                         <h3>Estoque Atual</h3>
                         <div class="table-container">
@@ -243,8 +280,12 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div> </div> </div>
-            <div id="registros-section" class="section">
+                    </div> 
+                </div> 
+            </div>
+
+            <!-- Seção Registros (Existente) -->
+            <div id="registros-section" class="section" data-permissao="admin,funcionario">
                 <div class="section-header">
                     <h2>Registro de Eventos</h2>
                 </div>
@@ -297,7 +338,9 @@
                     </form>
                 </div>
             </div>
-            <div id="bercario-section" class="section">
+
+            <!-- Seção Berçário (Existente) -->
+            <div id="bercario-section" class="section" data-permissao="admin,veterinario">
                 <div class="section-header">
                     <h2>Gerenciamento do Berçário</h2>
                     <button class="btn btn-primary" id="btn-abrir-modal-bercario">Novo Registro</button>
@@ -326,7 +369,8 @@
                 </div>
             </div>
 
-            <div id="maternidade-section" class="section">
+            <!-- Seção Maternidade (Existente) -->
+            <div id="maternidade-section" class="section" data-permissao="admin,veterinario">
                 <div class="section-header">
                     <h2>Ala de Maternidade</h2>
                     <button class="btn btn-primary" id="btn-abrir-modal-maternidade">Nova Porca</button>
@@ -355,7 +399,8 @@
                 </div>
             </div>
 
-            <div id="inseminacao-section" class="section">
+            <!-- Seção Inseminação (Existente) -->
+            <div id="inseminacao-section" class="section" data-permissao="admin,veterinario">
                 <div class="section-header">
                     <h2>Controle de Inseminação</h2>
                     <button class="btn btn-primary" id="btn-abrir-modal-inseminacao">Nova Inseminação</button>
@@ -384,15 +429,251 @@
                 </div>
             </div>
 
-        </section> </main>
+            <!-- Seção Gestão de Tarefas (Existente) -->
+            <div id="tarefas-section" class="section" data-permissao="admin,funcionario">
+                <div class="section-header">
+                    <h2>Gestão de Tarefas</h2>
+                    <button class="btn btn-primary admin-view" id="btn-abrir-modal-tarefa" style="display: none;">Nova Tarefa</button>
+                </div>
+                <div class="admin-view" style="display: none;">
+                    <div class="card-painel">
+                        <h2>Todas as Tarefas</h2>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Atribuído a</th>
+                                        <th>Prioridade</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-tarefas-admin"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="funcionario-view" style="display: none;">
+                    <div class="card-painel">
+                        <h2>Minhas Tarefas Pendentes</h2>
+                        <div id="lista-tarefas-funcionario"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Seção Gestão de Usuários (Existente) -->
+            <div id="usuarios-section" class="section" data-permissao="admin">
+                <div class="section-header">
+                    <h2>Gestão de Usuários</h2>
+                </div>
+                <div class="cards-wrapper">
+                    <div class="card-painel">
+                        <h2>Novo Usuário</h2>
+                        <form id="form-novo-usuario">
+                            <div class="grupo-formulario"><label for="usuario-nome">Nome Completo</label><input type="text" id="usuario-nome" placeholder="Ex: Carlos da Silva" required></div>
+                            <div class="grupo-formulario"><label for="usuario-id-login">ID de Login (Usuário)</label><input type="text" id="usuario-id-login" placeholder="Ex: carlos, c_silva" required></div>
+                            <div class="grupo-formulario"><label for="usuario-senha">Senha</label><input type="password" id="usuario-senha" placeholder="Mínimo 6 caracteres" required></div>
+                            <div class="grupo-formulario"><label for="usuario-perfil">Perfil de Acesso</label><select id="usuario-perfil" required><option value="">Selecione um perfil...</option><option value="funcionario">Funcionário</option><option value="veterinario">Veterinário</option><option value="admin">Administrador</option></select></div>
+                            <button type="submit" id="btn-salvar-novo-usuario" class="btn btn-primary">Salvar Novo Usuário</button>
+                        </form>
+                    </div>
+                    <div class="card-painel">
+                        <h2>Usuários Cadastrados</h2>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID de Login</th>
+                                        <th>Nome</th>
+                                        <th>Perfil</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-usuarios"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <div id="modal-genetica" class="modal"> </div>
-    <div id="modal-lote" class="modal"> </div>
-    <div id="modal-bercario" class="modal"> </div>
-    <div id="modal-maternidade" class="modal"> </div>
-    <div id="modal-inseminacao" class="modal"> </div>
-    <div id="modal-ocorrencia" class="modal modal-large"> </div>
+            <!-- Seção Financeiro (Existente) -->
+            <div id="financeiro-section" class="section" data-permissao="admin">
+                <div class="section-header">
+                    <h2>Gestão Financeira</h2>
+                </div>
+                <div class="cards-wrapper">
+                    <div class="card-painel">
+                        <h2>Novo Lançamento</h2>
+                        <form id="form-novo-lancamento">
+                            <div class="grupo-formulario"><label for="lancamento-data">Data</label><input type="date" id="lancamento-data" required></div>
+                            <div class="grupo-formulario"><label for="lancamento-descricao">Descrição</label><input type="text" id="lancamento-descricao" placeholder="Ex: Compra de vacinas" required></div>
+                            <div class="grupo-formulario"><label for="lancamento-valor">Valor (R$)</label><input type="number" id="lancamento-valor" min="0.01" step="0.01" placeholder="150.50" required></div>
+                            <div class="grupo-formulario"><label for="lancamento-tipo">Tipo</label><select id="lancamento-tipo" required><option value="saida">Saída (Gasto)</option><option value="entrada">Entrada (Receita)</option></select></div>
+                            <div class="grupo-formulario"><label for="lancamento-categoria">Categoria</label><select id="lancamento-categoria" required><option value="alimentacao">Alimentação</option><option value="medicamentos">Medicamentos</option><option value="venda_animais">Venda de Animais</option><option value="manutencao">Manutenção</option><option value="outros">Outros</option></select></div>
+                            <button type="submit" id="btn-salvar-novo-lancamento" class="btn btn-primary">Salvar Lançamento</button>
+                        </form>
+                    </div>
+                    <div class="card-painel">
+                        <h2>Histórico de Movimentações</h2>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição</th>
+                                        <th>Valor (R$)</th>
+                                        <th>Tipo</th>
+                                        <th>Categoria</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-financeiro"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- 
+              =============================================
+              ==== NOVA SEÇÃO: Gestão de Contratos
+              =============================================
+            -->
+            <div id="contratos-section" class="section" data-permissao="admin,veterinario,funcionario">
+                <div class="section-header">
+                    <h2>Gestão de Contratos</h2>
+                    <!-- Botão "Novo Contrato" só aparece para Admin (JS vai controlar) -->
+                    <button class="btn btn-primary admin-view" id="btn-abrir-modal-contrato" style="display: none;">Novo Contrato</button>
+                </div>
+                
+                <div class="card-painel">
+                    <h2>Contratos Ativos e Vencidos</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fornecedor</th>
+                                    <th>Objeto</th>
+                                    <th>Data de Início</th>
+                                    <th>Data de Vencimento</th>
+                                    <th>Status</th>
+                                    <!-- Coluna de Ações (JS vai mostrar/esconder botões) -->
+                                    <th class="admin-view" data-permissao="admin" style="display: none;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-contratos">
+                                <!-- JS vai preencher aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </section> <!-- Fim .content -->
+    </main>
+
+    <!-- Modais de Formulário (Originais) -->
+    <div id="modal-genetica" class="modal"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-genetica">Nova Genética</h3><button class="modal-close" id="btn-x-fechar-modal-genetica">&times;</button></div><form id="form-genetica" class="modal-body"><div class="grupo-formulario"><label for="nome-genetica">Nome da Genética:</label><input type="text" id="nome-genetica" name="nome-genetica" required></div><div class="grupo-formulario"><label for="descricao-genetica">Descrição:</label><textarea id="descricao-genetica" name="descricao-genetica" rows="3"></textarea></div><div class="grupo-formulario"><label for="caracteristicas-genetica">Características:</label><textarea id="caracteristicas-genetica" name="caracteristicas-genetica" rows="3"></textarea></div><div class="grupo-formulario"><label for="status-genetica">Status:</label><select id="status-genetica" name="status-genetica" required><option value="ativa">Ativa</option><option value="inativa">Inativa</option></select></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-genetica">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div> </div>
+    <div id="modal-lote" class="modal"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-lote">Novo Lote</h3><button class="modal-close" id="btn-x-fechar-modal-lote">&times;</button></div><form id="form-lote" class="modal-body"><div class="grupo-formulario"><label for="nome-lote">Nome do Lote:</label><input type="text" id="nome-lote" name="nome-lote" required></div><div class="grupo-formulario"><label for="genetica-lote">Genética:</label><select id="genetica-lote" name="genetica-lote" required><option value="">Selecione uma genética</option></select></div><div class="grupo-formulario"><label for="quantidade-animais">Quantidade de Animais:</label><input type="number" id="quantidade-animais" name="quantidade-animais" min="1" required></div><div class="grupo-formulario"><label for="data-criacao">Data de Criação:</label><input type="date" id="data-criacao" name="data-criacao" required></div><div class="grupo-formulario"><label for="status-lote">Status:</label><select id="status-lote" name="status-lote" required><option value="ativo">Ativo</option><option value="inativo">Inativo</option><option value="quarentena">Quarentena</option></select></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-lote">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div> </div>
+    <div id="modal-bercario" class="modal"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-bercario">Novo Registro de Berçário</h3><button class="modal-close" id="btn-x-fechar-modal-bercario">&times;</button></div><form id="form-bercario" class="modal-body"><div class="grupo-formulario"><label for="lote-bercario">Lote:</label><select id="lote-bercario" name="lote-bercario" required><option value="">Selecione um lote</option></select></div><div class="grupo-formulario"><label for="quantidade-leitoes">Quantidade de Leitões:</label><input type="number" id="quantidade-leitoes" name="quantidade-leitoes" min="1" required></div><div class="grupo-formulario"><label for="data-nascimento">Data de Nascimento:</label><input type="date" id="data-nascimento" name="data-nascimento" required></div><div class="grupo-formulario"><label for="peso-medio">Peso Médio (kg):</label><input type="number" id="peso-medio" name="peso-medio" step="0.1" min="0" required></div><div class="grupo-formulario"><label for="status-bercario">Status:</label><select id="status-bercario" name="status-bercario" required><option value="ativo">Ativo</option><option value="desmamado">Desmamado</option><option value="transferido">Transferido</option></select></div><div class="grupo-formulario"><label for="data-desmame">Data de Desmame (opcional):</label><input type="date" id="data-desmame" name="data-desmame"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-bercario">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div> </div>
+    <div id="modal-maternidade" class="modal"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-maternidade">Nova Porca na Maternidade</h3><button class="modal-close" id="btn-x-fechar-modal-maternidade">&times;</button></div><form id="form-maternidade" class="modal-body"><div class="grupo-formulario"><label for="brinco-porca">Brinco da Porca:</label><input type="text" id="brinco-porca" name="brinco-porca" required></div><div class="grupo-formulario"><label for="genetica-porca">Genética:</label><select id="genetica-porca" name="genetica-porca" required><option value="">Selecione uma genética</option></select></div><div class="grupo-formulario"><label for="data-cobertura">Data da Cobertura:</label><input type="date" id="data-cobertura" name="data-cobertura" required></div><div class="grupo-formulario"><label for="data-parto-prevista">Data Prevista do Parto:</label><input type="date" id="data-parto-prevista" name="data-parto-prevista" required></div><div class="grupo-formulario"><label for="quantidade-leitoes-nascidos">Quantidade de Leitões Nascidos:</label><input type="number" id="quantidade-leitoes-nascidos" name="quantidade-leitoes-nascidos" min="0"></div><div class="grupo-formulario"><label for="status-maternidade">Status:</label><select id="status-maternidade" name="status-maternidade" required><option value="gestante">Gestante</option><option value="lactante">Lactante</option><option value="disponivel">Disponível</option><option value="recuperacao">Recuperação</option></select></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-maternidade">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div> </div>
+    <div id="modal-inseminacao" class="modal"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-inseminacao">Nova Inseminação</h3><button class="modal-close" id="btn-x-fechar-modal-inseminacao">&times;</button></div><form id="form-inseminacao" class="modal-body"><div class="grupo-formulario"><label for="brinco-femea">Brinco da Fêmea:</label><input type="text" id="brinco-femea" name="brinco-femea" required></div><div class="grupo-formulario"><label for="genetica-macho">Genética do Macho:</label><select id="genetica-macho" name="genetica-macho" required><option value="">Selecione uma genética</option></select></div><div class="grupo-formulario"><label for="data-inseminacao">Data da Inseminação:</label><input type="date" id="data-inseminacao" name="data-inseminacao" required></div><div class="grupo-formulario"><label for="tecnica-inseminacao">Técnica:</label><select id="tecnica-inseminacao" name="tecnica-inseminacao" required><option value="ia-convencional">IA Convencional</option><option value="ia-cervical">IA Cervical</option><option value="ia-intrauterina">IA Intrauterina</option><option value="monta-natural">Monta Natural</option></select></div><div class="grupo-formulario"><label for="resultado-inseminacao">Resultado:</label><select id="resultado-inseminacao" name="resultado-inseminacao" required><option value="aguardando">Aguardando</option><option value="positivo">Positivo</option><option value="negativo">Negativo</option></select></div><div class="grupo-formulario"><label for="data-verificacao">Data de Verificação (opcional):</label><input type="date" id="data-verificacao" name="data-verificacao"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-inseminacao">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div></form></div> </div>
+    <div id="modal-ocorrencia" class="modal modal-large"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-ocorrencia">Nova Ocorrência</h3><button class="modal-close" id="btn-x-fechar-modal-ocorrencia">&times;</button></div><form id="form-ocorrencia" class="modal-body"><div class="form-row"><div class="grupo-formulario"><label for="lote-ocorrencia">Lote Afetado:</label><select id="lote-ocorrencia" name="lote-ocorrencia" required><option value="">Selecione um lote</option></select></div><div class="grupo-formulario"><label for="tipo-ocorrencia">Tipo de Ocorrência:</label><select id="tipo-ocorrencia" name="tipo-ocorrencia" required><option value="">Selecione o tipo</option><option value="sanitaria">Sanitária</option><option value="alimentacao">Alimentação</option><option value="medicamento">Medicamento</option><option value="transferencia">Transferência</option><option value="observacao">Observação</option><option value="vacina">Vacina</option><option value="morte">Morte</option></select></div></div><div class="form-row"><div class="grupo-formulario"><label for="prioridade-ocorrencia">Prioridade:</label><select id="prioridade-ocorrencia" name="prioridade-ocorrencia" required><option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option><option value="critica">Crítica</option></select></div><div class="grupo-formulario"><label for="data-hora-ocorrencia">Data e Hora:</label><input type="datetime-local" id="data-hora-ocorrencia" name="data-hora-ocorrencia" required></div></div><div class="grupo-formulario"><label for="titulo-ocorrencia">Título da Ocorrência:</label><input type="text" id="titulo-ocorrencia" name="titulo-ocorrencia" placeholder="Ex: Suspeita de doença respiratória" required></div><div class="grupo-formulario"><label for="descricao-ocorrencia">Descrição Detalhada:</label><textarea id="descricao-ocorrencia" name="descricao-ocorrencia" rows="4" placeholder="Descreva a ocorrência, sintomas observados, ações tomadas..." required></textarea></div><div class="form-row"><div class="grupo-formulario"><label for="animais-afetados">Número de Animais Afetados:</label><input type="number" id="animais-afetados" name="animais-afetados" min="0"></div><div class="grupo-formulario"><label for="medicamento-aplicado">Medicamento Aplicado:</label><input type="text" id="medicamento-aplicado" name="medicamento-aplicado" placeholder="Nome do medicamento (opcional)"></div></div><div class="form-row"><div class="grupo-formulario"><label for="dosagem">Dosagem:</label><input type="text" id="dosagem" name="dosagem" placeholder="Ex: 2ml por animal"></div><div class="grupo-formulario"><label for="veterinario-responsavel">Veterinário Responsável:</label><input type="text" id="veterinario-responsavel" name="veterinario-responsavel" value="" readonly></div></div><div class="grupo-formulario"><label for="proximas-acoes">Próximas Ações/Observações:</label><textarea id="proximas-acoes" name="proximas-acoes" rows="3" placeholder="Descreva as próximas ações necessárias ou observações importantes..."></textarea></div><div class="grupo-formulario"><label for="status-ocorrencia">Status:</label><select id="status-ocorrencia" name="status-ocorrencia" required><option value="pendente">Pendente</option><option value="em-andamento">Em Andamento</option><option value="resolvida">Resolvida</option><option value="monitoramento">Em Monitoramento</option></select></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-ocorrencia">Cancelar</button><button type="submit" class="btn btn-primary">Salvar Ocorrência</button></div></form></div> </div>
+    
+    <!-- Modal de Edição de Usuário -->
+    <div id="modal-usuario" class="modal"> <div class="modal-content"><div class="modal-header"><h3 id="titulo-modal-usuario">Editar Usuário</h3><button class="modal-close" id="btn-x-fechar-modal-usuario">&times;</button></div><form id="form-editar-usuario" class="modal-body"><input type="hidden" id="edit-usuario-id-original"><div class="grupo-formulario"><label for="edit-usuario-nome">Nome Completo</label><input type="text" id="edit-usuario-nome" required></div><div class="grupo-formulario"><label for="edit-usuario-id-login">ID de Login (Usuário)</label><input type="text" id="edit-usuario-id-login" required></div><div class="grupo-formulario"><label for="edit-usuario-perfil">Perfil de Acesso</label><select id="edit-usuario-perfil" required><option value="funcionario">Funcionário</option><option value="veterinario">Veterinário</option><option value="admin">Administrador</option></select></div><div class="grupo-formulario"><label for="edit-usuario-senha">Nova Senha (opcional)</label><input type="password" id="edit-usuario-senha" placeholder="Deixe em branco para não alterar"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="btn-cancelar-modal-usuario">Cancelar</button><button type="submit" class="btn btn-primary">Salvar Alterações</button></div></form></div> </div>
+    
+    <!-- Modal de Tarefa -->
+    <div id="modal-tarefa" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="titulo-modal-tarefa">Nova Tarefa</h3>
+                <button class="modal-close" id="btn-x-fechar-modal-tarefa">&times;</button>
+            </div>
+            <form id="form-tarefa" class="modal-body">
+                <input type="hidden" id="tarefa-id-original">
+                
+                <div class="grupo-formulario">
+                    <label for="tarefa-titulo">Título</label>
+                    <input type="text" id="tarefa-titulo" placeholder="Ex: Vacinar Lote B-002" required>
+                </div>
+                
+                <div class="grupo-formulario">
+                    <label for="tarefa-descricao">Descrição</label>
+                    <textarea id="tarefa-descricao" rows="3" placeholder="Descreva os detalhes da tarefa..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="grupo-formulario">
+                        <label for="tarefa-atribuido-a">Atribuir para</label>
+                        <select id="tarefa-atribuido-a" required>
+                            <option value="">Selecione um funcionário...</option>
+                        </select>
+                    </div>
+                    <div class="grupo-formulario">
+                        <label for="tarefa-prioridade">Prioridade</label>
+                        <select id="tarefa-prioridade" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancelar-modal-tarefa">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Tarefa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 
+      =============================================
+      ==== NOVO MODAL: Modal para Criar/Editar Contrato
+      =============================================
+    -->
+    <div id="modal-contrato" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="titulo-modal-contrato">Novo Contrato</h3>
+                <button class="modal-close" id="btn-x-fechar-modal-contrato">&times;</button>
+            </div>
+            <form id="form-contrato" class="modal-body">
+                <input type="hidden" id="contrato-id-original">
+                
+                <div class="grupo-formulario">
+                    <label for="contrato-fornecedor">Fornecedor</label>
+                    <input type="text" id="contrato-fornecedor" placeholder="Ex: AgroCereais S.A." required>
+                </div>
+                
+                <div class="grupo-formulario">
+                    <label for="contrato-objeto">Objeto do Contrato</label>
+                    <input type="text" id="contrato-objeto" placeholder="Ex: Fornecimento de 10T de milho/mês" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="grupo-formulario">
+                        <label for="contrato-data-inicio">Data de Início</label>
+                        <input type="date" id="contrato-data-inicio" required>
+                    </div>
+                    <div class="grupo-formulario">
+                        <label for="contrato-data-vencimento">Data de Vencimento</label>
+                        <input type="date" id="contrato-data-vencimento" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancelar-modal-contrato">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Contrato</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modais Globais (Confirmação e Notificação) -->
     <div id="modal-confirmacao" class="modal-overlay hidden">
         <div class="modal-content modal-pequeno">
             <h2 id="confirmacao-titulo">Confirmar Ação</h2>
@@ -413,10 +694,17 @@
         </div>
     </div>
 
+    <!-- Scripts (em ordem de dependência) -->
     <script src="js/app.js"></script>
+    <script src="js/modulos/veterinario.js"></script>
+    <script src="js/modulos/usuarios.js"></script> <!-- Precisa ser carregado antes de tarefas -->
+    <script src="js/modulos/insumos.js"></script>
     <script src="js/modulos/registros.js"></script>
     <script src="js/modulos/relatorios.js"></script>
-    <script src="js/modulos/insumos.js"></script>
-    <script src="js/modulos/veterinario.js"></script>
+    <script src="js/modulos/financeiro.js"></script>
+    <script src="js/modulos/tarefas.js"></script>
+    <script src="js/modulos/contratos.js"></script>
+    <!-- O script de contratos será adicionado no próximo passo -->
+
 </body>
 </html>

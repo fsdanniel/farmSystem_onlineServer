@@ -1,40 +1,43 @@
 /*
-  Arquivo: css/style.css
-  Este arquivo agora contém APENAS os estilos específicos da página de login.
-  Os estilos de body, botões e formulários vêm do global.css
+  Arquivo: css/style.css
+  Este arquivo agora contém APENAS os estilos específicos da página de login.
+  Os estilos de body, botões e formulários vêm do global.css
 */
 
 body {
     /* O body global tem o fundo cinza, mas o login
-       precisa centralizar o conteúdo. */
+       precisa centralizar o conteúdo. */
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; 
+    height: 100vh;
 }
 
 .caixa-login {
-    background-color: var(--cor-fundo-card); /* Usando variável global */
+    background-color: var(--cor-fundo-card);
+    /* Usando variável global */
     padding: 40px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px; 
+    max-width: 400px;
     text-align: center;
 }
 
 h1 {
     margin-bottom: 10px;
-    color: var(--cor-texto); /* Usando variável global */
+    color: var(--cor-texto);
+    /* Usando variável global */
 }
 
 .caixa-login p {
     margin-bottom: 30px;
-    color: var(--cor-texto-claro); /* Usando variável global */
+    color: var(--cor-texto-claro);
+    /* Usando variável global */
 }
 
 /* REMOVIDO: *, body, .grupo-formulario, input, button
-   Eles agora são globais!
+   Eles agora são globais!
 */
 
 /* Links adicionais (se você os tiver) */
@@ -43,11 +46,39 @@ h1 {
 }
 
 .links-adicionais a {
-    color: var(--cor-info); /* Usando variável global */
+    color: var(--cor-info);
+    /* Usando variável global */
     text-decoration: none;
     font-size: 14px;
 }
 
 .links-adicionais a:hover {
     text-decoration: underline;
+}
+
+/* --- ESTILOS PARA MENSAGEM DE ERRO (NOVO) --- */
+/* (Substitui o alert()) */
+.mensagem-erro {
+    /* (Estes valores são baseados no seu global.css) */
+    /* (Assumindo que global.css define --cor-perigo) */
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+
+    /* Escondido por padrão */
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Classe que o JS vai adicionar para mostrar a mensagem */
+.mensagem-erro.visivel {
+    display: block;
+    opacity: 1;
 }

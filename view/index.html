@@ -1,42 +1,50 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Gerenciamento de Granja</title>
-    
 
-    <link rel="stylesheet" href="css/global/global.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="css/global/global.css" />
 
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
     <main class="caixa-login">
-        <form id="formulario-login">
-            <h1>Acesso ao Sistema</h1>
-            <p>Bem-vindo ao painel de gerenciamento da sua granja.</p>
-            
-            <div class="grupo-formulario">
+      <form id="formulario-login">
+        <h1>Acesso ao Sistema</h1>
+        <p>Bem-vindo ao painel de gerenciamento da sua granja.</p>
 
-                <label for="id-granja">Usuário</label>
-                <input type="text" id="id-granja" name="id-granja" placeholder="Digite seu usuário (admin, vet, func)" required>
-            </div>
-            
-            <div class="grupo-formulario">
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" name="senha" placeholder="Digite sua senha (123)" required>
-            </div>
+        <div class="grupo-formulario">
+          <label for="id-granja">Usuário</label>
+          <input
+            type="text"
+            id="id-granja"
+            name="id-granja"
+            placeholder="Digite seu usuário (admin, vet, func)"
+            required
+          />
+        </div>
 
-            <p id="mensagem-erro" class="mensagem-erro" aria-live="polite"></p>
+        <div class="grupo-formulario">
+          <label for="senha">Senha</label>
+          <input
+            type="password"
+            id="senha"
+            name="senha"
+            placeholder="Digite sua senha (123)"
+            required
+          />
+        </div>
 
-            <button type="submit" id="botao-login" class="btn btn-primary">Entrar</button> 
-            
-        </form>
+        <p id="mensagem-erro" class="mensagem-erro" aria-live="polite"></p>
+
+        <button type="submit" id="botao-login" class="btn btn-primary">
+          Entrar
+        </button>
+      </form>
     </main>
 
     <script src="js/login.js"></script>
-
-</body>
+  </body>
 </html>
-

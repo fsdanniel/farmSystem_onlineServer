@@ -1,44 +1,49 @@
-/* Arquivo: css/comum/global.css
-  VERSÃO 2.0 (Refatoração de Design)
-*/
-
-/* --- 1. IMPORTAÇÃO DA FONTE --- */
+/* IMPORTAÇÃO DA FONTE */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Cores Primárias (Mantidas) */
-    --cor-primaria: #28a745; 
+    /* Cores Primárias */
+    --cor-primaria: #28a745;
     --cor-primaria-hover: #218838;
-    --cor-secundaria: #6c757d; 
+    --cor-secundaria: #6c757d;
     --cor-secundaria-hover: #5a6268;
 
-    /* Cores de Ação (Mantidas) */
-    --cor-info: #007bff; 
+    /* Cores de Ação */
+    --cor-info: #007bff;
     --cor-info-hover: #0056b3;
-    --cor-perigo: #dc3545; 
+    --cor-perigo: #dc3545;
     --cor-perigo-hover: #c82333;
 
-    /* --- 2. NOVAS CORES DE LAYOUT --- */
-    --cor-fundo: #f0f2f5; /* Fundo principal (cinza claro) */
-    --cor-fundo-card: #ffffff; /* Fundo dos painéis e modais */
+    /* CORES DE LAYOUT */
+    --cor-fundo: #f0f2f5;
+    /* Fundo principal (cinza claro) */
+    --cor-fundo-card: #ffffff;
+    /* Fundo dos painéis e modais */
     --cor-borda: #dee2e6;
-    
+
     /* Cores do Sidebar Escuro */
-    --cor-sidebar-fundo: #111827; /* Cinza bem escuro */
-    --cor-sidebar-fundo-hover: #1f2937; /* Um tom mais claro */
-    --cor-sidebar-texto: #d1d5db; /* Texto (cinza claro) */
-    --cor-sidebar-texto-hover: #ffffff; /* Texto (branco) */
-    
+    --cor-sidebar-fundo: #111827;
+    /* Cinza bem escuro */
+    --cor-sidebar-fundo-hover: #1f2937;
+    /* Um tom mais claro */
+    --cor-sidebar-texto: #d1d5db;
+    /* Texto (cinza claro) */
+    --cor-sidebar-texto-hover: #ffffff;
+    /* Texto (branco) */
+
     /* Cores de Texto */
-    --cor-texto: #1f2937; /* Texto principal (quase preto) */
-    --cor-texto-label: #374151; /* Texto de labels (um pouco mais claro) */
-    --cor-texto-claro: #6b7280; /* Texto de parágrafos (cinza) */
-    
+    --cor-texto: #1f2937;
+    /* Texto principal (quase preto) */
+    --cor-texto-label: #374151;
+    /* Texto de labels (um pouco mais claro) */
+    --cor-texto-claro: #6b7280;
+    /* Texto de parágrafos (cinza) */
+
     /* Cores de Formulário */
     --cor-fundo-input: #ffffff;
 }
 
-/* --- 3. RESET BÁSICO E NOVA FONTE --- */
+/* CARACTERÍSTICAS GERAIS */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -46,15 +51,16 @@
 }
 
 body {
-    font-family: 'Poppins', Arial, Helvetica, sans-serif; /* FONTE ATUALIZADA */
+    font-family: 'Poppins', Arial, Helvetica, sans-serif;
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased; /* Deixa a fonte mais nítida */
+    -webkit-font-smoothing: antialiased;
+    /* Deixa a fonte mais nítida */
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- 4. PADRÃO DE FORMULÁRIO (Redesenhado) --- */
+/* PADRÃO DE FORMULÁRIO */
 .grupo-formulario {
     margin-bottom: 20px;
     text-align: left;
@@ -63,7 +69,8 @@ body {
 .grupo-formulario label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 500; /* Mais sutil que 'bold' */
+    font-weight: 500;
+    /* Mais sutil que 'bold' */
     color: var(--cor-texto-label);
     font-size: 14px;
 }
@@ -73,15 +80,17 @@ body {
 .grupo-formulario textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid var(--cor-borda); /* Bordas mais sutis */
-    border-radius: 6px; /* Bordas um pouco mais arredondadas */
+    border: 1px solid var(--cor-borda);
+    /* Bordas mais sutis */
+    border-radius: 6px;
+    /* Bordas um pouco mais arredondadas */
     font-size: 15px;
     font-family: inherit;
     background-color: var(--cor-fundo-input);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Remove a aparência feia do iOS */
+/* Remove a aparência diferente do iOS */
 .grupo-formulario input,
 .grupo-formulario select,
 .grupo-formulario textarea {
@@ -96,17 +105,20 @@ body {
 .grupo-formulario textarea:focus {
     outline: none;
     border-color: var(--cor-info);
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); /* Sombra mais suave */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+    /* Sombra mais suave */
 }
 
-/* --- 5. PADRÃO DE BOTÕES (Refinamento) --- */
+/* PADRÃO DE BOTÕES */
 .btn {
     width: 100%;
     padding: 12px 24px;
     border: none;
-    border-radius: 6px; /* Mais arredondado */
+    border-radius: 6px;
+    /* Mais arredondado */
     font-size: 15px;
-    font-weight: 600; /* Um pouco mais forte */
+    font-weight: 600;
+    /* Um pouco mais forte */
     cursor: pointer;
     text-decoration: none;
     text-align: center;
@@ -121,8 +133,10 @@ body {
 .btn-primary {
     background-color: var(--cor-primaria);
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(40, 167, 69, 0.25); /* Sombra da cor do botão */
+    box-shadow: 0 4px 14px rgba(40, 167, 69, 0.25);
+    /* Sombra da cor do botão */
 }
+
 .btn-primary:hover {
     background-color: var(--cor-primaria-hover);
     box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
@@ -133,6 +147,7 @@ body {
     color: #ffffff;
     box-shadow: 0 4px 14px rgba(220, 53, 69, 0.25);
 }
+
 .btn-danger:hover {
     background-color: var(--cor-perigo-hover);
     box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
@@ -143,6 +158,7 @@ body {
     color: #ffffff;
     box-shadow: 0 4px 14px rgba(0, 123, 255, 0.25);
 }
+
 .btn-info:hover {
     background-color: var(--cor-info-hover);
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
@@ -153,17 +169,20 @@ body {
     color: #ffffff;
     box-shadow: 0 4px 14px rgba(108, 117, 125, 0.2);
 }
+
 .btn-secondary:hover {
     background-color: var(--cor-secundaria-hover);
     box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);
 }
 
 .btn-small {
-    padding: 8px 14px; /* Um pouco maior para toque */
+    padding: 8px 14px;
+    /* Um pouco maior para toque */
     font-size: 13px;
     font-weight: 500;
     width: auto;
-    box-shadow: none; /* Botões de tabela não precisam de sombra */
+    box-shadow: none;
+    /* Botões de tabela não precisam de sombra */
 }
 
 /* Botão de "Visualizar" (olho) */
@@ -172,6 +191,7 @@ body {
     color: var(--cor-texto-label);
     border: 1px solid var(--cor-borda);
 }
+
 .btn.btn-secondary.btn-small[title="Visualizar"]:hover {
     background-color: var(--cor-fundo);
     border-color: #aaa;

@@ -1,6 +1,5 @@
 /*
-  Arquivo: css/style.css
-  Este arquivo agora contém APENAS os estilos específicos da página de login.
+  Este arquivo contém apenas os estilos específicos da página de login.
   Os estilos de body, botões e formulários vêm do global.css
 */
 
@@ -36,11 +35,7 @@ h1 {
     /* Usando variável global */
 }
 
-/* REMOVIDO: *, body, .grupo-formulario, input, button
-   Eles agora são globais!
-*/
-
-/* Links adicionais (se você os tiver) */
+/* Links adicionais */
 .links-adicionais {
     margin-top: 20px;
 }
@@ -56,11 +51,10 @@ h1 {
     text-decoration: underline;
 }
 
-/* --- ESTILOS PARA MENSAGEM DE ERRO (NOVO) --- */
-/* (Substitui o alert()) */
+/* MENSAGEM DE ERRO */
+
 .mensagem-erro {
-    /* (Estes valores são baseados no seu global.css) */
-    /* (Assumindo que global.css define --cor-perigo) */
+
     color: #721c24;
     background-color: #f8d7da;
     border: 1px solid #f5c6cb;

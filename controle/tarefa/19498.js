@@ -1,32 +1,27 @@
 import express from "express";
-import { cadastrarGenetica, listarGeneticas, cadastrarLote, listarLotes } from "./granjaService.js";
+import { registrarOcorrencia, listarOcorrencias, atualizarOcorrencia } from "./ocorrenciaService.js";
 
 const router = express.Router();
 
-// Cadastrar genética
-router.post("/geneticas", (req, res) => {
-  const { nome, descricao, caracteristicas } = req.body;
-  const genetica = cadastrarGenetica({ nome, descricao, caracteristicas });
-  res.status(201).json({ mensagem: "Genética cadastrada", genetica });
+// Registrar nova ocorrência
+router.post("/ocorrencias", (req, res) => {
+  const { loteId, descricao, data } = req.body;
+  const ocorrencia = registrarOcorrencia({ loteId, descricao, data });
+  res.status(201).json({ mensagem: "Ocorrência registrada", ocorrencia });
 });
 
-// Listar genéticas
-router.get("/geneticas", (req, res) => {
-  const geneticas = listarGeneticas();
-  res.json(geneticas);
+// Listar todas as ocorrências
+router.get("/ocorrencias", (req, res) => {
+  const ocorrencias = listarOcorrencias();
+  res.json(ocorrencias);
 });
 
-// Cadastrar lote
-router.post("/lotes", (req, res) => {
-  const { nome, quantidadeAnimais, geneticaId } = req.body;
-  const lote = cadastrarLote({ nome, quantidadeAnimais, geneticaId });
-  res.status(201).json({ mensagem: "Lote cadastrado", lote });
-});
-
-// Listar lotes
-router.get("/lotes", (req, res) => {
-  const lotes = listarLotes();
-  res.json(lotes);
+// Atualizar ocorrência
+router.put("/ocorrencias/:id", (req, res) => {
+  const { id } = req.params;
+  const { descricao, data } = req.body;
+  const ocorrenciaAtualizada = atualizarOcorrencia(id, { descricao, data });
+  res.json({ mensagem: "Ocorrência atualizada", ocorrencia: ocorrenciaAtualizada });
 });
 
 export default router;

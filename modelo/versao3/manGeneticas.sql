@@ -12,6 +12,6 @@ WHERE gen_nome = /*gen nome $1*/;
 
 SELECT gen_id, gen_nome, gen_descricao, gen_caracteristicas, gen_status
 FROM geneticas
-WHERE 1=1
+WHERE gen_status = 'ativo'
 ORDER BY gen_id
 LIMIT 5 OFFSET 0;

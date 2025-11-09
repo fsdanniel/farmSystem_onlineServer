@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS ocorrencias;
 DROP TABLE IF EXISTS bercario;
+DROP TABLE IF EXISTS maternidade;
 DROP TABLE IF EXISTS insumos;
 DROP TABLE IF EXISTS contratos;
 DROP TABLE IF EXISTS financeiro;
@@ -9,11 +10,18 @@ DROP TABLE IF EXISTS eventoMortalidadeLote;
 DROP TABLE IF EXISTS eventoMortalidadeFemea;
 DROP TABLE IF EXISTS eventoCoberturaInseminacao;
 DROP TABLE IF EXISTS inseminacao;
-DROP TABLE IF EXISTS maternidade;
 DROP TABLE IF EXISTS lotes;
 DROP TABLE IF EXISTS geneticas;
 DROP TABLE IF EXISTS tarefas;
 DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS matriz;
+
+CREATE TABLE matriz(
+	matriz_id BIGSERIAL PRIMARY KEY,
+	matriz_brinco varchar(50) NOT NULL UNIQUE,
+	matriz_dataEntrada DATE NULL,
+	matriz_ativa BOOLEAN DEFAULT TRUE
+);
 
 CREATE TABLE usuarios(
 	user_id BIGSERIAL PRIMARY KEY,
@@ -81,7 +89,7 @@ CREATE TABLE bercario(
 
 CREATE TABLE maternidade(
 	mater_id BIGSERIAL PRIMARY KEY,
-	mater_brincoFemea VARCHAR(30) NOT NULL UNIQUE,
+	mater_brincoFemea VARCHAR(30) NOT NULL REFERENCES matriz(matriz_brinco),
 	mater_genetica BIGINT NOT NULL,
 	mater_dataCobertura DATE,
 	mater_dataPartoPrevisto DATE,
@@ -93,7 +101,7 @@ CREATE TABLE maternidade(
 
 CREATE TABLE inseminacao(
 	insem_id BIGSERIAL PRIMARY KEY,
-	insem_brincoFemea VARCHAR(30) NOT NULL REFERENCES maternidade(mater_brincoFemea),
+	insem_brincoFemea VARCHAR(30) NOT NULL REFERENCES matriz(matriz_brinco),
 	insem_geneticaMacho BIGINT NOT NULL,
 	insem_dataInseminacao DATE NOT NULL,
 	insem_tecnica VARCHAR(30),
@@ -105,15 +113,15 @@ CREATE TABLE inseminacao(
 
 CREATE TABLE eventoCoberturaInseminacao(
 	cobert_id BIGSERIAL PRIMARY KEY,
-	cobert_dataCobertura DATE NOT NULL,
-	cobert_matrizId BIGINT NOT NULL REFERENCES maternidade(mater_id),
+	cobert_data DATE NOT NULL,
+	cobert_inseminacaoId BIGINT NOT NULL REFERENCES inseminacao(insem_id),
 	cobert_observacoes VARCHAR(350) NOT NULL
 );
 
 CREATE TABLE eventoParto(
 	parto_id BIGSERIAL PRIMARY KEY,
 	parto_data DATE NOT NULL,
-	part_matrizId BIGINT NOT NULL REFERENCES maternidade(mater_id),
+	part_brincoFemea VARCHAR(30) NOT NULL REFERENCES matriz(matriz_brinco),
 	parto_quantidadeNascidos BIGINT NOT NULL,
 	parto_observacoes VARCHAR(350) NOT NULL
 
@@ -136,7 +144,7 @@ CREATE TABLE eventoMortalidadeLote(
 CREATE TABLE eventoMortalidadeFemea(
 	mort_id BIGSERIAL PRIMARY KEY,
 	mort_data DATE NOT NULL,
-	mort_matrizId BIGINT NOT NULL REFERENCES maternidade(mater_id),
+	mort_brincoFemea VARCHAR(30) NOT NULL REFERENCES matriz(matriz_brinco),
 	mort_observacoes VARCHAR(350)
 );
 

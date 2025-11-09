@@ -1,0 +1,32 @@
+DROP TYPE IF EXISTS TYPE_LOTESTATUS;
+DROP TYPE IF EXISTS TYPE_OCORRTIPO;
+DROP TYPE IF EXISTS TYPE_OCORRPRIORIDADE;
+DROP TYPE IF EXISTS TYPE_OCORRSTATUS;
+DROP TYPE IF EXISTS TYPE_INSUMOS;
+DROP TYPE IF EXISTS TYPE_BERSTATUS;
+DROP TYPE IF EXISTS TYPE_MATERSTATUS;
+DROP TYPE IF EXISTS TYPE_INSEMRESULTADO;
+DROP TYPE IF EXISTS TYPE_USERTIPO;
+DROP TYPE IF EXISTS TYPE_STATUSCONTRATO;
+DROP TYPE IF EXISTS TYPE_FINANCEIROTIPO;
+DROP TYPE IF EXISTS TYPE_FINANCEIROCATEGORIA;
+DROP TYPE IF EXISTS TYPE_TAREFAPRIORIDADE;
+DROP TYPE IF EXISTS TYPE_TAREFASTATUS;
+
+CREATE TYPE TYPE_TAREFASTATUS AS ENUM ('pendente', 'concluida', 'em andamento');
+CREATE TYPE TYPE_TAREFAPRIORIDADE AS ENUM ('baixa', 'media', 'alta', 'critica');
+CREATE TYPE TYPE_STATUSCONTRATO AS ENUM ('vencido', 'vigente');
+CREATE TYPE TYPE_FINANCEIROTIPO AS ENUM ('saída', 'entrada');
+CREATE TYPE TYPE_FINANCEIROCATEGORIA AS ENUM ('alimentação', 'compra de insumos', 
+'venda de animais', 'manutenção', 'outros');
+CREATE TYPE TYPE_LOTESTATUS AS ENUM ('ativo', 'inativo', 'quarentenado');
+CREATE TYPE TYPE_OCORRTIPO AS ENUM ('sanitaria', 'alimentacao', 'medicamento',
+'transferencia', 'observacao', 'vacina', 'morte');
+CREATE TYPE TYPE_OCORRPRIORIDADE AS ENUM ('baixa', 'media', 'alta', 'critica');
+CREATE TYPE TYPE_OCORRSTATUS AS ENUM ('pendente', 'em andamento', 'resolvida');
+CREATE TYPE TYPE_INSUMOS AS ENUM('milho(em grao)', 'farelo de soja', 'nucleo crescimento',
+'complexo vitaminico', 'medicamento x');
+CREATE TYPE TYPE_BERSTATUS AS ENUM ('ativo', 'desmamado', 'transferido');
+CREATE TYPE TYPE_MATERSTATUS AS ENUM ('gestante', 'lactante', 'disponivel', 'recuperacao');
+CREATE TYPE TYPE_INSEMRESULTADO AS ENUM ('aguardando', 'positivo', 'negativo');
+CREATE TYPE TYPE_USERTIPO AS ENUM ('administrador', 'funcionario', 'veterinario');

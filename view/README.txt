@@ -1,6 +1,6 @@
 Projeto: Sistema de Gestão de Granja (Frontend)
 Este documento serve como o guia oficial para desenvolvedores do frontend do Sistema de Gestão de Granja. 
-O projeto está num estado "feature-complete", com todos os módulos principais integrados e funcionais.
+O projeto está em um estado "feature-complete", com todos os módulos principais integrados e funcionais.
 
 Como Executar o Projeto
 O projeto é um frontend puro (HTML/CSS/JS) e não requer um backend para ser executado (os dados são simulados).

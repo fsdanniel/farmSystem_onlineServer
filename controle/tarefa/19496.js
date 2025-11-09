@@ -29,4 +29,8 @@ router.get("/lotes", (req, res) => {
   res.json(lotes);
 });
 
+<<<<<<< HEAD
 export default router;
+=======
+export default router;
+>>>>>>> 5543c809c9d28a3c9f4892184b57e28cb15da9db

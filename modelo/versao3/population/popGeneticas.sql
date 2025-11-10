@@ -1,5 +1,9 @@
 DELETE FROM geneticas;
 
+-- Verificar se deu certo:
+SELECT *
+FROM geneticas;
+
 INSERT INTO geneticas (gen_nome, gen_descricao, gen_caracteristicas) VALUES
 ('Duroc', 'Raça americana conhecida pela excelente qualidade da carne.', 'Alta taxa de crescimento, carne marmorizada e boa conversão alimentar.'),
 ('Landrace', 'Raça originária da Dinamarca amplamente usada em cruzamentos comerciais.', 'Alta prolificidade, boa produção de leite e excelente habilidade materna.'),

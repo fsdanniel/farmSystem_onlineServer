@@ -1,5 +1,12 @@
 DELETE FROM lotes;
 
+-- Antes de inserir lotes, verificar se existem registros de geneticas, 
+-- e apenas inserir lotes com geneticas ja registradas.
+SELECT * FROM geneticas;
+
+-- Verificar se insercao de lotes:
+SELECT * FROM lotes;
+
 INSERT INTO lotes (lote_nome, lote_genetica, lote_quantidade, lote_dataCriacao) VALUES
 ('A001', 'Duroc', 45, '2025-01-01'),
 ('B002', 'Landrace', 60, '2025-01-05'),

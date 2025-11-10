@@ -1,12 +1,22 @@
---Gerar novo lote:
+CALL novoLote(nome VARCHAR(50), genetica VARCHAR(50), 
+quantidade INT, dataCriacao DATE, status TYPE_LOTESTATUS);
 
-INSERT INTO LOTES(lote_nome, lote_genetica, lote_quantidade, lote_dataCriacao) VALUES ($1, $2, $3, $4);
+CALL editaLote(
+	idL BIGINT, nome VARCHAR(50), genetica VARCHAR(50), quantidade INT,
+	dataCriacao DATE, status TYPE_LOTESTATUS);
 
--- Filtrar por genetica/status:
-EXEC filtragemGeneticaStatus(gen, status);
+SELECT buscaPaginaLotes(geneticaNomeLote VARCHAR(50), statusLote VARCHAR(20));
 
--- listagem {ID 	Nome 	Genética 	Qtd. Animais 	Data Criação 	Status}
-SELECT lote_id, lote_nome, lote_genetica, lote_quantidade, lote_dataCriacao, lote_status
-FROM lotes;
+SELECT listagemFinalPaginaLotes();
 
 
+-- testes:
+
+    CALL novoLote('lote teste', 'Duroc', 12, '2023-04-09', 'quarentenado');
+	CALL editaLote(101, 'lote teste2', 'Duroc', 13, '2023-04-10', 'inativo');
+	SELECT *FROM lotes;
+
+	SELECT buscaPaginaLotes(NULL, NULL);
+	SELECT buscaPaginaLotes(NULL, 'quarentenado');
+	SELECT buscaPaginaLotes('Duroc', NULL);
+	SELECT buscaPaginaLotes('Duroc', 'ativo');

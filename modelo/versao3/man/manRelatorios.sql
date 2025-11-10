@@ -1,68 +1,33 @@
--- Conta a quantidade de genéticas ativas:
-SELECT COUNT(gen_id)
-FROM geneticas
-WHERE gen_status IS TRUE;
+SELECT quantidadeGeneticasAtivas();
 
--- Conta a quantidade de loter ativos:
-SELECT COUNT(lote_id)
-FROM lotes
-WHERE lote_status = 'ativo';
+SELECT quantidadeLotesAtivos();
 
--- Soma a quantidade de totos os animais:
-SELECT 
-    COALESCE((SELECT SUM(lote_quantidade) FROM lotes), 0) +
-    COALESCE((SELECT SUM(ber_qtdeLeitoes) FROM bercario), 0) +
-    COALESCE((SELECT SUM(mater_qtdeLeiloes) FROM maternidade), 0) AS total_animais;
+SELECT quantidadeAnimaisAtivos();
 
--- soma a quantidade de lotes em quarentena:
-SELECT COUNT(lote_id)
-FROM lotes
-WHERE lote_status = 'quarentenado';
+SELECT quantidadeLotesQuarentenados();
 
--- soma a quantidade de leitoes no bercario:
-SELECT COALESCE(SUM(ber_qtdeLeitoes), 0) AS total_leitoes_bercario
-FROM bercario;
+SELECT quantidadeLeitoesBercario();
 
--- soma a quantidade de porcas gestantes:
-SELECT COUNT(*) AS total_porcas_gestantes
-FROM maternidade
-WHERE mater_status = 'gestante';
+SELECT quantidadePorcasGestantes();
 
--- soma a quantidade de porcas lactantes:
-SELECT COUNT(*) AS total_porcas_lactantes
-FROM maternidade
-WHERE mater_status = 'lactante';
+SELECT quantidadePorcasLactantes();
 
--- soma a quantidade de inseminacoes pendentes:
-SELECT COUNT(*) AS total_inseminacoes_pendentes
-FROM inseminacao
-WHERE insem_resultado = 'aguardando';
+SELECT quantidadeInseminacoesPendentes();
 
--- gerador de relatorios {partos, desmames} com dataInicial e data_Final:
 
--- relatorio do tipo parto:
-SELECT 
-    evento_data        AS data,
-    evento_lote        AS lote_ou_matriz,
-    evento_quantidade  AS quantidade,
-    evento_observacoes AS observacoes
-FROM eventos
-WHERE evento_tipo = 'parto'
-  AND evento_data BETWEEN /*dataInicial$1*/ AND /*dataFinal$2*/
-ORDER BY evento_data;
+-- Listagem do relatorio da busca disponibilizada ao final da pagina relatorios:
 
--- gerador do tipo desmame:
+-- SELECT relatorioPaginaRelatorios(tipo VARCHAR(20), dataIni DATE, dataFim DATE);
+-- dataIni e dataFim aceitam os valores NULL na busca, e o tipo apenas Desmames e Partos
+SELECT relatorioPaginaRelatorios('Partos', '1012-09-01', '2025-10-10');
+SELECT relatorioPaginaRelatorios('Desmames', '1012-09-01', '2025-10-10');
 
-SELECT 
-    evento_data        AS data,
-    evento_lote        AS lote_ou_matriz,
-    evento_quantidade  AS quantidade,
-    evento_observacoes AS observacoes
-FROM eventos
-WHERE evento_tipo = 'desmame'
-  AND evento_data BETWEEN /*dataInicial$1*/ AND /*dataFinal$2*/
-ORDER BY evento_data;
+
+
+
 
 
 
 	
+
+

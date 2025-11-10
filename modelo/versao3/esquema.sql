@@ -82,13 +82,13 @@ CREATE TABLE bercario(
 CREATE TABLE maternidade(
 	mater_id BIGSERIAL PRIMARY KEY,
 	mater_brincoFemea VARCHAR(30) NOT NULL UNIQUE,
-	mater_genetica BIGINT NOT NULL,
+	mater_genetica VARCHAR(50) NOT NULL,
 	mater_dataCobertura DATE,
-	mater_dataPartoPrevisto DATE,
-	mater_qtdeLeiloes INT,
-	mater_status TYPE_MATERSTATUS NOT NULL,
+	mater_dataPartoPrevisto DATE NULL,
+	mater_qtdeLeiloes INT NULL,
+	mater_status TYPE_MATERSTATUS NOT NULL DEFAULT 'disponivel',
 
-	FOREIGN KEY (mater_genetica) REFERENCES geneticas(gen_id)
+	FOREIGN KEY (mater_genetica) REFERENCES geneticas(gen_nome)
 );
 
 CREATE TABLE inseminacao(
@@ -113,7 +113,7 @@ CREATE TABLE eventoCoberturaInseminacao(
 CREATE TABLE eventoParto(
 	parto_id BIGSERIAL PRIMARY KEY,
 	parto_data DATE NOT NULL,
-	part_matrizId BIGINT NOT NULL REFERENCES maternidade(mater_id),
+	parto_matrizId BIGINT NOT NULL REFERENCES maternidade(mater_id),
 	parto_quantidadeNascidos BIGINT NOT NULL,
 	parto_observacoes VARCHAR(350) NOT NULL
 
@@ -121,6 +121,7 @@ CREATE TABLE eventoParto(
 
 CREATE TABLE eventoDesmame(
 	desm_id BIGSERIAL PRIMARY KEY,
+	desm_data DATE NULL,
 	desm_loteId BIGINT NOT NULL REFERENCES lotes(lote_id),
 	desm_quantidadeDesmamados BIGINT NOT NULL,
 	desm_observacoes VARCHAR(350)

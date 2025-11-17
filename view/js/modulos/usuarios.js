@@ -110,8 +110,13 @@ async function inicializarModuloUsuarios() {
     const btnFecharModalEdicao = document.getElementById('btn-x-fechar-modal-usuario');
     const btnCancelarModalEdicao = document.getElementById('btn-cancelar-modal-usuario');
 
-    // Carrega os dados iniciais
+        // Carrega os dados iniciais
     await carregarUsuarios();
+
+    // Configura a busca na tabela de usuários
+    configurarBuscaUsuarios();
+
+    
 
     // Listener para o formulário de NOVO usuário
     formNovoUsuario.addEventListener('submit', async (e) => {
@@ -223,6 +228,28 @@ async function carregarUsuarios() {
         tabelaBody.appendChild(tr);
     });
 }
+function configurarBuscaUsuarios() {
+    const inputBusca = document.getElementById('busca-usuarios');
+    const tabelaBody = document.getElementById('tabela-usuarios');
+
+    if (!inputBusca || !tabelaBody) return;
+
+    inputBusca.addEventListener('input', function () {
+        const termo = this.value.toLowerCase().trim();
+        const linhas = tabelaBody.querySelectorAll('tr');
+
+        linhas.forEach((linha) => {
+            const textoLinha = linha.innerText.toLowerCase();
+
+            if (!termo || textoLinha.includes(termo)) {
+                linha.style.display = '';
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+    });
+}
+
 
 /**
  * Abre o modal de edição e preenche com os dados do usuário.

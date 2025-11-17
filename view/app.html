@@ -829,6 +829,33 @@
             </div>
             <div class="card-painel">
               <h2>Usuários Cadastrados</h2>
+              <div class="card-painel">
+              <h2>Usuários Cadastrados</h2>
+              <!-- Campo de busca -->
+  <div class="grupo-formulario" style="margin-bottom: 10px;">
+    <label for="busca-usuarios">Buscar usuário</label>
+    <input
+      type="text"
+      id="busca-usuarios"
+      placeholder="Digite nome, ID de login ou perfil..."
+    />
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID de Login</th>
+          <th>Nome</th>
+          <th>Perfil</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabela-usuarios"></tbody>
+    </table>
+  </div>
+</div>
+
               <div class="table-container">
                 <table class="data-table">
                   <thead>

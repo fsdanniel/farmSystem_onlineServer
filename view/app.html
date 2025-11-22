@@ -485,7 +485,8 @@
                 <option value="cobertura">Cobertura / Inseminação</option>
                 <option value="parto">Parto</option>
                 <option value="desmame">Desmame</option>
-                <option value="mortalidade">Mortalidade</option>
+                <option value="mortalidade lote">Mortalidade lote</option>
+                <option value="mortalidade matriz">Mortalidade matriz</option>
               </select>
             </div>
 
@@ -555,8 +556,38 @@
               </button>
             </form>
 
-            <form id="formMortalidade" class="form-section">
-              <h3>Registrar Mortalidade</h3>
+
+             <form id="formMortalidade lote" class="form-section">
+              <h3>Registrar Mortalidade lote</h3>
+              <div class="grupo-formulario">
+                <label>Data da ocorrência:</label><input type="date" />
+              </div>
+              <div class="grupo-formulario">
+                <label>ID do animal ou lote:</label
+                ><input type="text" placeholder="Ex: Lote 07" />
+              </div>
+              <div class="grupo-formulario">
+                <label>Quantidade de Óbitos:</label><input type="number" placeholder="Ex: 3"/>
+              </div>
+              <div class="grupo-formulario">
+                <label>Causa da mortalidade:</label
+                ><input
+                  type="text"
+                  placeholder="Ex: infecção, esmagamento..."
+                />
+              </div>
+              <div class="grupo-formulario">
+                <label>Observações:</label><textarea rows="3"></textarea>
+              </div>
+              <button type="button" class="btn btn-primary">
+                Registrar Mortalidade
+              </button>
+            </form>
+          </div>
+        
+
+            <form id="formMortalidade matriz" class="form-section">
+              <h3>Registrar Mortalidade matriz</h3>
               <div class="grupo-formulario">
                 <label>Data da ocorrência:</label><input type="date" />
               </div>

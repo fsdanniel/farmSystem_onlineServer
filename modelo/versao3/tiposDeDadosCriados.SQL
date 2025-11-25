@@ -12,13 +12,17 @@ DROP TYPE IF EXISTS TYPE_FINANCEIROTIPO;
 DROP TYPE IF EXISTS TYPE_FINANCEIROCATEGORIA;
 DROP TYPE IF EXISTS TYPE_TAREFAPRIORIDADE;
 DROP TYPE IF EXISTS TYPE_TAREFASTATUS;
+DROP TYPE IF EXISTS TYPE_EVENTOCOBERTURAINSEMINACAOTIPO;
+DROP TYPE IF EXISTS TYPE_GENETICASTATUS;
 
+CREATE TYPE TYPE_GENETICASTATUS AS ENUM ('ativa', 'inativa');
+CREATE TYPE TYPE_EVENTOCOBERTURAINSEMINACAOTIPO AS ENUM ('artificial', 'natural');
 CREATE TYPE TYPE_TAREFASTATUS AS ENUM ('pendente', 'concluida', 'em andamento');
 CREATE TYPE TYPE_TAREFAPRIORIDADE AS ENUM ('baixa', 'media', 'alta', 'critica');
-CREATE TYPE TYPE_STATUSCONTRATO AS ENUM ('vencido', 'vigente');
-CREATE TYPE TYPE_FINANCEIROTIPO AS ENUM ('saída', 'entrada');
+CREATE TYPE TYPE_STATUSCONTRATO AS ENUM ('vencido', 'vigente', 'futuro');
+CREATE TYPE TYPE_FINANCEIROTIPO AS ENUM ('saida', 'entrada');
 CREATE TYPE TYPE_FINANCEIROCATEGORIA AS ENUM ('alimentação', 'compra de insumos', 
-'venda de animais', 'manutenção', 'outros');
+'venda de animais', 'manutencao', 'outros');
 CREATE TYPE TYPE_LOTESTATUS AS ENUM ('ativo', 'inativo', 'quarentenado');
 CREATE TYPE TYPE_OCORRTIPO AS ENUM ('sanitaria', 'alimentacao', 'medicamento',
 'transferencia', 'observacao', 'vacina', 'morte');

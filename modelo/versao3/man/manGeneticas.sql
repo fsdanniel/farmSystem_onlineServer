@@ -1,8 +1,13 @@
-CALL novaGenetica(nome VARCHAR(50), descricao VARCHAR(150), caracteristicas VARCHAR(150),
-	status BOOLEAN DEFAULT TRUE);
 
-CALL editaGenetica(idGen BIGINT, nome VARCHAR(50), descricao VARCHAR(150), caracteristicas VARCHAR(150), status BOOLEAN DEFAULT TRUE);
+--  Para registrar uma nova genetica:
 
-SELECT filtrarGeneticaPorNome(nomeX VARCHAR(50);
+CALL novoRegistroGenetica(nome, descricao, caracteristicas);
 
-SELECT listagemFinalPaginaGeneticas();
+CALL editaRegistroGenetica(idGen, nome, descricao, caracteristicas, status); -- status ativa ou inativa, ativa por padrão
+
+CALL excluirRegistroGenetica(idGen);
+
+SELECT * FROM buscaGenetica(nomeX);
+SELECT * FROM listaNomesGeneticas();
+
+SELECT * FROM listagemFinalPaginaGeneticas(); -- LISTA DE NO MAXIMO 5

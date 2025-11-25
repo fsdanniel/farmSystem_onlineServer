@@ -1,0 +1,2 @@
+cd ~/adminer
+php -S localhost:8080 adminer.php

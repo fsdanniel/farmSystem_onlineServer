@@ -1,7 +1,7 @@
 
 --verificar login:
 
-CALL verificaLogin(nickname VARCHAR(50), senha VARCHAR(50));
+SELECT * FROM verificaLogin(nickname VARCHAR(50), senha VARCHAR(50));
 
 -- modo de uso:
 

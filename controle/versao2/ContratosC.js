@@ -1,9 +1,6 @@
 "use strict";
 
-/**
- * IMPORTA AS FUNÇÕES DO BACK
- * Aqui você importa apenas as funções necessárias do banco.
- */
+
 import {
     novoRegistroContrato,
     editarRegistroContrato,

@@ -486,7 +486,58 @@ app.get('/financeiro', async (req, res) => {
     }
 });
 
+// GENÉTICAS
 
+app.get('/geneticas', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM geneticas WHERE gen_statusregistro = true;`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar genéticas." });
+    }
+});
+
+app.post('/geneticas', async (req, res) => {
+    const g = req.body;
+    try {
+        if (g.id) {
+            const { rowCount } = await db.query(
+                `UPDATE geneticas
+                 SET gen_nome=$1, gen_descricao=$2, gen_caracteristicas=$3, gen_status=$4
+                 WHERE gen_id=$5 AND gen_statusregistro = true;`,
+                [g.nome, g.descricao, g.caracteristicas, g.status, g.id]
+            );
+            if (rowCount === 0) return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+            return res.json({ sucesso: true, operacao: "editado" });
+        }
+
+        await db.query(
+            `INSERT INTO geneticas (gen_nome, gen_descricao, gen_caracteristicas, gen_status, gen_statusregistro)
+             VALUES ($1, $2, $3, $4, true);`,
+            [g.nome, g.descricao, g.caracteristicas, g.status]
+        );
+
+        res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao salvar genética." });
+    }
+});
+
+app.delete('/geneticas/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        const { rowCount } = await db.query(
+            `UPDATE geneticas SET gen_statusregistro=false WHERE gen_id=$1 AND gen_statusregistro = true;`,
+            [id]
+        );
+        if (rowCount === 0) return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir genética." });
+    }
+});
+
+//
 
 
 // SERVIDOR

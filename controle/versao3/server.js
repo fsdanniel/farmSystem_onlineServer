@@ -14,14 +14,49 @@ const db = new Pool({
     port: 5432
 });
 
-// ------ BERÇÁRIO ------
+// LOGIN
+app.post('/login', async (req, res) => {
+    const { usuario, senha } = req.body;
 
-// Listar todos ou filtrar (nome/status)
+    if (!usuario || !senha) {
+        return res.status(400).json({ sucesso: false, motivo: "usuario_ou_senha_faltando" });
+    }
+
+    try {
+        const resultado = await db.query(
+            `SELECT verificaLogin($1, $2) AS tipo;`,
+            [usuario, senha]
+        );
+
+        const tipoUsuario = resultado.rows[0]?.tipo;
+
+        if (!tipoUsuario) {
+            return res.json({
+                sucesso: false,
+                motivo: "credenciais_invalidas"
+            });
+        }
+
+        return res.json({
+            sucesso: true,
+            usuario: usuario,
+            tipo: tipoUsuario
+        });
+
+    } catch (err) {
+        console.error("ERRO LOGIN:", err);
+        return res.status(500).json({ erro: "Erro no servidor" });
+    }
+});
+
+
+// BERÇÁRIO
+
 app.get('/bercario', async (req, res) => {
     try {
         const resultado = await db.query(
             `SELECT * FROM buscaBercario($1, $2);`,
-            [null, null] // NULL = não filtra
+            [null, null] 
         );
 
         return res.json({
@@ -34,14 +69,13 @@ app.get('/bercario', async (req, res) => {
     }
 });
 
-// Criar ou editar
 app.post('/bercario', async (req, res) => {
     const dados = req.body;
     console.log("📩 Dados recebidos no POST /bercario:", dados);
 
     try {
         if (dados.id) {
-            // --- EDIÇÃO ---
+            
             await db.query(
                 `CALL editarRegistroBercario($1, $2, $3, $4, $5, $6, $7);`,
                 [
@@ -57,7 +91,7 @@ app.post('/bercario', async (req, res) => {
             return res.json({ sucesso: true, operacao: "editado" });
         }
 
-        // --- CRIAÇÃO ---
+        
         await db.query(
             `CALL novoRegistroBercario($1, $2, $3, $4, $5, $6, $7);`,
             [
@@ -67,7 +101,7 @@ app.post('/bercario', async (req, res) => {
                 dados.pesoMedio,
                 dados.dataDesmame,
                 dados.status,
-                true // statusRegistro
+                true 
             ]
         );
         return res.json({ sucesso: true, operacao: "criado" });
@@ -78,7 +112,7 @@ app.post('/bercario', async (req, res) => {
     }
 });
 
-// Excluir
+
 app.delete('/bercario/:id', async (req, res) => {
     const id = req.params.id;
 
@@ -109,7 +143,7 @@ app.delete('/bercario/:id', async (req, res) => {
 
 
 
-// ------ Servidor ------
+// SERVIDOR
 
 app.listen(3000, () => console.log("Backend rodando na porta 3000"));
 

@@ -402,6 +402,89 @@ app.delete('/eventos/morte-lote/:id', async (req, res) => {
     }
 });
 
+//FINANCEIRO
+
+app.post('/financeiro', async (req, res) => {
+    const { data, descricao, valor, tipo, categoria } = req.body;
+
+    if (!data || !descricao || !valor || !tipo || !categoria) {
+        return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
+    }
+
+    try {
+        await db.query(
+            `CALL novoRegistroFinanceiro($1, $2, $3, $4, $5);`,
+            [data, descricao, valor, tipo, categoria]
+        );
+
+        return res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error("Erro ao criar registro financeiro:", err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao criar registro financeiro." });
+    }
+});
+
+app.put('/financeiro/:id', async (req, res) => {
+    const { id } = req.params;
+    const { data, descricao, valor, tipo, categoria } = req.body;
+
+    if (!id) return res.status(400).json({ sucesso: false, erro: "ID é obrigatório." });
+    if (!data || !descricao || !valor || !tipo || !categoria) {
+        return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
+    }
+
+    try {
+        const { rowCount } = await db.query(
+            `CALL editarRegistroFinanceiro($1, $2, $3, $4, $5, $6);`,
+            [id, data, descricao, valor, tipo, categoria]
+        );
+
+        if (rowCount === 0) {
+            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+        }
+
+        return res.json({ sucesso: true, operacao: "editado" });
+    } catch (err) {
+        console.error("Erro ao editar registro financeiro:", err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao editar registro financeiro." });
+    }
+});
+
+app.delete('/financeiro/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { rowCount } = await db.query(
+            `SELECT 1 FROM financeiro WHERE finan_id = $1;`,
+            [id]
+        );
+
+        if (rowCount === 0) {
+            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+        }
+
+        await db.query(
+            `CALL excluirRegistroFinanceiro($1);`,
+            [id]
+        );
+
+        res.json({ sucesso: true, operacao: "excluido" });
+
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir registro financeiro." });
+    }
+});
+
+
+app.get('/financeiro', async (req, res) => {
+    try {
+        const { rows } = await db.query(`SELECT * FROM financeiro ORDER BY finan_id;`);
+        return res.json({ sucesso: true, dados: rows });
+    } catch (err) {
+        console.error("Erro ao buscar registros financeiros:", err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao buscar registros financeiros." });
+    }
+});
 
 
 

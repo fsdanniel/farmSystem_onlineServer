@@ -230,6 +230,180 @@ app.delete('/contratos/:id', async (req, res) => {
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir contrato." });
     }
 });
+// EVENTOS
+
+app.post('/eventos/inseminacao', async (req, res) => {
+    const { dataCobertura, matrizId, tipo, observacoes } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO eventocoberturainseminacao
+                (cobert_datacobertura, cobert_matrizid, cobert_tipo, cobert_observacoes, cobert_statusregistro)
+             VALUES ($1, $2, $3, $4, true)
+             RETURNING cobert_id;`,
+            [dataCobertura, matrizId, tipo, observacoes]
+        );
+        return res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de inseminação." });
+    }
+});
+
+app.post('/eventos/parto', async (req, res) => {
+    const { data, matrizId, quantidadeNascidos, observacoes } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO eventoparto
+                (parto_data, parto_matrizid, parto_quantidadenascidos, parto_observacoes, parto_statusregistro)
+             VALUES ($1, $2, $3, $4, true)
+             RETURNING parto_id;`,
+            [data, matrizId, quantidadeNascidos, observacoes]
+        );
+        return res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de parto." });
+    }
+});
+
+app.post('/eventos/desmame', async (req, res) => {
+    const { data, loteId, quantidadeDesmamados, observacoes } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO eventodesmame
+                (desm_data, desm_loteid, desm_quantidadedesmamados, desm_observacoes, desm_statusregistro)
+             VALUES ($1, $2, $3, $4, true)
+             RETURNING desm_id;`,
+            [data, loteId, quantidadeDesmamados, observacoes]
+        );
+        return res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de desmame." });
+    }
+});
+
+app.post('/eventos/morte-femea', async (req, res) => {
+    const { femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO eventomortalidadefemea
+                (mort_femeadata, mort_femeaidmatriz, mort_femeacausamorte, mort_femeaobservacoes, mort_femeastatusregistro)
+             VALUES ($1, $2, $3, $4, true)
+             RETURNING mort_femeaid;`,
+            [femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes]
+        );
+        return res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de morte de fêmea." });
+    }
+});
+
+app.post('/eventos/morte-lote', async (req, res) => {
+    const { loteData, loteIdLote, loteCausaMorte, loteObservacoes } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO eventomortalidadelote
+                (mort_lotedata, mort_loteidlote, mort_lotecausamorte, mort_loteobservacoes, mort_lotestatusregistro)
+             VALUES ($1, $2, $3, $4, true)
+             RETURNING mort_loteid;`,
+            [loteData, loteIdLote, loteCausaMorte, loteObservacoes]
+        );
+        return res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de morte de lote." });
+    }
+});
+
+app.delete('/eventos/inseminacao/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await db.query(
+            `SELECT cobert_id FROM eventocoberturainseminacao WHERE cobert_id = $1;`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
+
+        await db.query(`CALL excluirEventoCoberturaInseminacao($1);`, [id]);
+        return res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de inseminação." });
+    }
+});
+
+app.delete('/eventos/parto/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await db.query(
+            `SELECT parto_id FROM eventoparto WHERE parto_id = $1;`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
+
+        await db.query(`CALL excluirEventoParto($1);`, [id]);
+        return res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de parto." });
+    }
+});
+
+app.delete('/eventos/desmame/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await db.query(
+            `SELECT desm_id FROM eventodesmame WHERE desm_id = $1;`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
+
+        await db.query(`CALL excluirEventoDesmame($1);`, [id]);
+        return res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de desmame." });
+    }
+});
+
+app.delete('/eventos/morte-femea/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await db.query(
+            `SELECT mort_femeaid FROM eventomortalidadefemea WHERE mort_femeaid = $1;`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
+
+        await db.query(`CALL excluirEventoMorteFemea($1);`, [id]);
+        return res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de morte de fêmea." });
+    }
+});
+
+app.delete('/eventos/morte-lote/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await db.query(
+            `SELECT mort_loteid FROM eventomortalidadelote WHERE mort_loteid = $1;`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
+
+        await db.query(`CALL excluirEventoMorteLote($1);`, [id]);
+        return res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de morte de lote." });
+    }
+});
+
+
+
 
 
 // SERVIDOR

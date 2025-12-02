@@ -1,11 +1,31 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const path = require('path');               // Necessário para lidar com caminhos de pastas
+const { exec } = require('child_process');  // Necessário para abrir o navegador
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- CONFIGURAÇÃO DO FRONT-END (VISÃO) ---
+
+// Define onde está a pasta da View. 
+// __dirname é a pasta atual (controle). '../view' sobe um nível e entra em view.
+const pastaView = path.join(__dirname, '../../view');
+
+// Diz ao Express para servir arquivos estáticos (CSS, JS, Imagens) dessa pasta
+app.use(express.static(pastaView));
+
+// Rota Raiz: Quando acessar http://localhost:3000/ entrega o index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(pastaView, 'index.html'));
+});
+
+// --- FIM CONFIGURAÇÃO FRONT-END ---
+
+
+// CONFIGURAÇÃO DO BANCO DE DADOS
 const db = new Pool({
     host: 'localhost',
     user: 'postgres',
@@ -13,6 +33,8 @@ const db = new Pool({
     database: 'granja',
     port: 5432
 });
+
+// --- ROTAS DA API ---
 
 // LOGIN
 app.post('/login', async (req, res) => {
@@ -621,58 +643,58 @@ app.get('/maternidades', async (req, res) => {
 
 
 app.post('/maternidades', async (req, res) => {
-  const materData = req.body;
+    const materData = req.body;
 
-  try {
-    if (materData.id) {
-      await db.query(
-        `CALL editarregistromaternidade($1, $2, $3, $4, $5, $6, $7);`,
-        [
-          materData.id,
-          materData.brincoFemea,
-          materData.genetica,
-          materData.dataCobertura,
-          materData.dataPartoPrevisto,
-          materData.qtdeLeitoes,
-          materData.status || 'disponivel'
-        ]
-      );
-      return res.json({ sucesso: true, operacao: "editado" });
+    try {
+        if (materData.id) {
+            await db.query(
+                `CALL editarregistromaternidade($1, $2, $3, $4, $5, $6, $7);`,
+                [
+                    materData.id,
+                    materData.brincoFemea,
+                    materData.genetica,
+                    materData.dataCobertura,
+                    materData.dataPartoPrevisto,
+                    materData.qtdeLeitoes,
+                    materData.status || 'disponivel'
+                ]
+            );
+            return res.json({ sucesso: true, operacao: "editado" });
+        }
+
+        await db.query(
+            `CALL novoregistromaternidade($1, $2, $3, $4, $5, $6);`,
+            [
+                materData.brincoFemea,
+                materData.genetica,
+                materData.dataCobertura,
+                materData.dataPartoPrevisto,
+                materData.qtdeLeitoes,
+                materData.status || 'disponivel'
+            ]
+        );
+
+        res.json({ sucesso: true, operacao: "criado" });
+
+    } catch (err) {
+        console.error("Erro ao salvar maternidade:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao salvar maternidade." });
     }
-
-    await db.query(
-      `CALL novoregistromaternidade($1, $2, $3, $4, $5, $6);`,
-      [
-        materData.brincoFemea,
-        materData.genetica,
-        materData.dataCobertura,
-        materData.dataPartoPrevisto,
-        materData.qtdeLeitoes,
-        materData.status || 'disponivel'
-      ]
-    );
-
-    res.json({ sucesso: true, operacao: "criado" });
-
-  } catch (err) {
-    console.error("Erro ao salvar maternidade:", err);
-    res.status(500).json({ sucesso: false, erro: "Erro ao salvar maternidade." });
-  }
 });
 
 app.delete('/maternidades/:id', async (req, res) => {
-  const { id } = req.params;
+    const { id } = req.params;
 
-  try {
-    await db.query(
-      `CALL excluirregistromaternidade($1);`,
-      [id]
-    );
-    res.json({ sucesso: true, operacao: "excluido" });
-  } catch (err) {
-    console.error("Erro ao excluir maternidade:", err);
-    res.status(500).json({ sucesso: false, erro: "Erro ao excluir maternidade." });
-  }
+    try {
+        await db.query(
+            `CALL excluirregistromaternidade($1);`,
+            [id]
+        );
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error("Erro ao excluir maternidade:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir maternidade." });
+    }
 });
 
 // OCORRÊNCIAS
@@ -862,8 +884,24 @@ app.delete('/usuarios/:nickname', async (req, res) => {
 });
 
 
+// --- INICIALIZAÇÃO DO SERVIDOR COM AUTO-OPEN ---
+app.listen(3000, () => {
+    console.log("------------------------------------------------");
+    console.log("✅ Backend rodando na porta 3000");
+    console.log("📂 Servindo arquivos da pasta: " + pastaView);
+    console.log("🌐 Acesse em: http://localhost:3000");
+    console.log("------------------------------------------------");
 
-
-
-// SERVIDOR 
-app.listen(3000, () => console.log("Backend rodando na porta 3000"));
+    // Lógica para abrir o navegador automaticamente
+    const url = 'http://localhost:3000';
+    
+    // Identifica o comando correto baseado no Sistema Operacional
+    const start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open');
+    
+    // Executa o comando
+    exec(`${start} ${url}`, (error) => {
+        if (error) {
+            console.log("⚠️ Não foi possível abrir o navegador automaticamente. Por favor, abra manualmente.");
+        }
+    });
+});

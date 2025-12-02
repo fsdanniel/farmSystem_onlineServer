@@ -883,6 +883,298 @@ app.delete('/usuarios/:nickname', async (req, res) => {
     }
 });
 
+//TAREFAS
+
+app.get('/tarefas', async (req, res) => {
+   try {
+       const dados = await db.query(`SELECT * FROM buscatarefas();`);
+       res.json({ sucesso: true, dados: dados.rows });
+   } catch (err) {
+       console.error("Erro ao listar tarefas:", err);
+       res.status(500).json({ sucesso: false, erro: "Erro ao listar tarefas." });
+   }
+});
+
+app.post('/tarefas', async (req, res) => {
+   const t = req.body;
+
+
+   try {
+       await db.query(
+           `CALL novoregistrotarefa($1,$2,$3,$4,$5);`,
+           [
+               t.titulo,
+               t.descricao,
+               t.usuariresponsavel,
+               t.prioridade,
+               t.status
+           ]
+       );
+
+
+       res.json({ sucesso: true, operacao: "criado" });
+
+
+   } catch (err) {
+       console.error("Erro ao criar tarefa:", err);
+       res.status(500).json({ sucesso: false, erro: "Erro ao criar tarefa." });
+   }
+});
+
+
+app.put('/tarefas/:id', async (req, res) => {
+   const { id } = req.params;
+   const t = req.body;
+
+
+   try {
+       await db.query(
+           `CALL editarregistrotarefa($1,$2,$3,$4,$5,$6);`,
+           [
+               id,
+               t.titulo,
+               t.descricao,
+               t.usuariresponsavel,
+               t.prioridade,
+               t.status
+           ]
+       );
+
+
+       res.json({ sucesso: true, operacao: "editado" });
+
+
+   } catch (err) {
+       console.error("Erro ao atualizar tarefa:", err);
+       res.status(500).json({ sucesso: false, erro: "Erro ao atualizar tarefa." });
+   }
+});
+
+
+app.delete('/tarefas/:id', async (req, res) => {
+   const { id } = req.params;
+
+
+   try {
+       await db.query(`CALL excluirregistrotarefa($1);`, [id]);
+       res.json({ sucesso: true, operacao: "excluido" });
+
+
+   } catch (err) {
+       console.error("Erro ao excluir tarefa:", err);
+       res.status(500).json({ sucesso: false, erro: "Erro ao excluir tarefa." });
+   }
+});
+
+
+app.post('/tarefas/concluir/:id', async (req, res) => {
+   const { id } = req.params;
+
+
+   try {
+       await db.query(`CALL concluirtarefa($1);`, [id]);
+       res.json({ sucesso: true, operacao: "concluida" });
+
+
+   } catch (err) {
+       console.error("Erro ao concluir tarefa:", err);
+       res.status(500).json({ sucesso: false, erro: "Erro ao concluir tarefa." });
+   }
+});
+
+
+app.get('/tarefas/minhas/:usuario', async (req, res) => {
+   const { usuario } = req.params;
+
+
+   try {
+       const dados = await db.query(
+           `SELECT * FROM minhastarefas($1);`,
+           [usuario]
+       );
+
+
+       res.json({ sucesso: true, dados: dados.rows });
+
+
+   } catch (err) {
+       console.error("Erro ao buscar minhas tarefas:", err);
+       res.status(500).json({ sucesso: false, erro: "Erro ao buscar tarefas do usuário." });
+   }
+});
+
+
+app.get('/api/tarefas', async (req, res) => {
+    try {
+        const sql = `SELECT * FROM buscatarefas()`;
+        const resultado = await db.query(sql);
+        res.json({ ok: true, resultado: resultado.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao listar tarefas" });
+    }
+});
+
+
+app.post('/api/tarefas', async (req, res) => {
+    try {
+        const { titulo, descricao, usuarioresponsavel, prioridade, status } = req.body;
+
+
+        const sql = `
+            call novoregistrotarefa($1,$2,$3,$4,$5)
+        `;
+
+
+        const resultado = await db.query(sql, [
+            titulo,
+            descricao,
+            usuarioresponsavel,
+            prioridade,
+            status
+        ]);
+
+
+        res.json({ ok: true, resultado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao criar tarefa" });
+    }
+});
+
+
+app.put('/api/tarefas/:id', async (req, res) => {
+    try {
+        const { titulo, descricao, usuarioresponsavel, prioridade, status } = req.body;
+
+
+        const sql = `
+            call editarregistrotarefa($1,$2,$3,$4,$5,$6)
+        `;
+
+
+        const resultado = await db.query(sql, [
+            req.params.id,
+            titulo,
+            descricao,
+            usuarioresponsavel,
+            prioridade,
+            status
+        ]);
+
+
+        res.json({ ok: true, resultado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao atualizar tarefa" });
+    }
+});
+
+
+app.delete('/api/tarefas/:id', async (req, res) => {
+    try {
+        const sql = `call excluirregistrotarefa($1)`;
+        const resultado = await db.query(sql, [req.params.id]);
+
+
+        res.json({ ok: true, resultado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao excluir tarefa" });
+    }
+});
+
+
+
+app.post('/api/tarefas/:id/concluir', async (req, res) => {
+    try {
+        const sql = `call concluirtarefa($1)`;
+        const resultado = await db.query(sql, [req.params.id]);
+
+
+        res.json({ ok: true, resultado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao concluir tarefa" });
+    }
+});
+
+app.get('/api/tarefas/me/:usuario', async (req, res) => {
+    try {
+        const sql = `SELECT * FROM minhaterefas($1)`;
+        const resultado = await db.query(sql, [req.params.usuario]);
+
+
+        res.json({ ok: true, resultado: resultado.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao buscar tarefas do usuário" });
+    }
+});
+
+
+// RELATÓRIOS
+
+// --- resumo inicial da página ---
+app.get('/api/relatorios/resumo', async (req, res) => {
+    try {
+        const resultado = {
+            geneticas: (await db.query("SELECT quantidadegeneticasativas() AS v")).rows[0].v,
+            lotesAtivos: (await db.query("SELECT quantidadelotesativos() AS v")).rows[0].v,
+            animaisAtivos: (await db.query("SELECT quantidadeanimaisativos() AS v")).rows[0].v,
+            quarentena: (await db.query("SELECT quantidadelotesquarentenados() AS v")).rows[0].v,
+            bercario: (await db.query("SELECT quantidadeleitoesbercario() AS v")).rows[0].v,
+            gestantes: (await db.query("SELECT quantidadeporcasgestantes() AS v")).rows[0].v,
+            lactantes: (await db.query("SELECT quantidadeporcaslactantes() AS v")).rows[0].v,
+            inseminacoesPendentes: (await db.query("SELECT quantidadeinseminacoespendentes() AS v")).rows[0].v
+        };
+
+        res.json({ ok: true, resultado });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao buscar resumo" });
+    }
+});
+
+
+// --- busca de relatórios (partos/desmames) ---
+app.get('/api/relatorios', async (req, res) => {
+    try {
+        const { tipo, dataIni, dataFim } = req.query;
+
+        if (!tipo || (tipo !== "partos" && tipo !== "desmames")) {
+            return res.status(400).json({ ok: false, erro: "Tipo inválido. Use: partos | desmames" });
+        }
+
+        const query = `
+            SELECT * FROM buscarelatorios($1, $2, $3)
+        `;
+
+        const params = [
+            tipo,
+            dataIni || null,
+            dataFim || null
+        ];
+
+        const resultado = await db.query(query, params);
+
+        res.json({ ok: true, resultado: resultado.rows });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao buscar relatório" });
+    }
+});
+
+
+
+
+
+
+
+
+
 
 // --- INICIALIZAÇÃO DO SERVIDOR COM AUTO-OPEN ---
 app.listen(3000, () => {

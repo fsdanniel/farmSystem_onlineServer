@@ -529,7 +529,7 @@ app.get('/insumos/estoque', async (req, res) => {
 // LOTES
 
 app.get('/lotes', async (req, res) => {
-    const { genetica, status } = req.query || [null, null];
+    const { genetica, status } = req.query || {};
     try {
         const resultado = await db.query(
             `SELECT * FROM buscaPaginaLotes($1, $2)`,
@@ -537,7 +537,7 @@ app.get('/lotes', async (req, res) => {
         );
         return res.json({ sucesso: true, dados: resultado.rows });
     } catch (err) {
-        console.error("ERRO SQL:", err);
+        console.error("ERRO SQL GET /lotes:", err);
         return res.status(500).json({ erro: "Erro ao buscar lotes" });
     }
 });
@@ -546,41 +546,54 @@ app.post('/lotes', async (req, res) => {
     const dados = req.body;
     try {
         await db.query(
-            `CALL novoLote($1, $2, $3, $4, $5)`,
-            [dados.nome, dados.genetica, dados.quantidade, dados.dataCriacao, dados.status]
+            `CALL novolote($1, $2, $3, $4, $5)`,
+            [
+                dados.nome,
+                dados.genetica,
+                parseInt(dados.quantidade),
+                dados.dataCriacao,            // formato 'YYYY-MM-DD'
+                dados.status || 'ativo'
+            ]
         );
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("ERRO SQL:", err);
+        console.error("ERRO SQL POST /lotes:", err);
         return res.status(500).json({ erro: "Erro ao salvar lote" });
     }
 });
 
 app.put('/lotes/:id', async (req, res) => {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const dados = req.body;
     try {
         await db.query(
-            `CALL editaLote($1, $2, $3, $4, $5, $6)`,
-            [id, dados.nome, dados.genetica, dados.quantidade, dados.dataCriacao, dados.status]
+            `CALL editalote($1, $2, $3, $4, $5, $6)`,
+            [
+                id,
+                dados.nome,
+                dados.genetica,
+                parseInt(dados.quantidade),
+                dados.dataCriacao,
+                dados.status || 'ativo'
+            ]
         );
         return res.json({ sucesso: true, operacao: "editado" });
     } catch (err) {
-        console.error("ERRO SQL:", err);
+        console.error("ERRO SQL PUT /lotes/:id:", err);
         return res.status(500).json({ erro: "Erro ao editar lote" });
     }
 });
 
 app.delete('/lotes/:id', async (req, res) => {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     try {
         await db.query(
-            `CALL excluirLote($1)`,
+            `CALL excluirlote($1)`,
             [id]
         );
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("ERRO SQL:", err);
+        console.error("ERRO SQL DELETE /lotes/:id:", err);
         return res.status(500).json({ erro: "Erro ao excluir lote" });
     }
 });

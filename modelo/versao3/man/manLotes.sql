@@ -1,6 +1,6 @@
 
 CALL novoLote(nome, genetica, quantidade, dataCriacao, status);
-
+// Anotações da Keila: novolote, não novoLote.
 CALL editaLote(idL, nome, genetica, quantidade, dataCriacao, status);
 	
 CALL excluirLote(idL);

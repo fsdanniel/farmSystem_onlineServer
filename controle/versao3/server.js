@@ -529,52 +529,63 @@ app.get('/insumos/estoque', async (req, res) => {
 // LOTES
 
 app.get('/lotes', async (req, res) => {
+    const { genetica, status } = req.query || [null, null];
     try {
-        const { rows } = await db.query(`SELECT * FROM buscaPaginaLotes($1, $2);`, [null, null]);
-        res.json({ sucesso: true, dados: rows });
+        const resultado = await db.query(
+            `SELECT * FROM buscaPaginaLotes($1, $2)`,
+            [genetica || null, status || null]
+        );
+        return res.json({ sucesso: true, dados: resultado.rows });
     } catch (err) {
-        res.status(500).json({ sucesso: false, erro: "Erro ao buscar lotes." });
+        console.error("ERRO SQL:", err);
+        return res.status(500).json({ erro: "Erro ao buscar lotes" });
     }
 });
 
 app.post('/lotes', async (req, res) => {
-    const { lote_id, lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status } = req.body;
+    const dados = req.body;
     try {
-        if (lote_id) {
-            await db.query(
-                `CALL editaLote($1, $2, $3, $4, $5, $6);`,
-                [lote_id, lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status]
-            );
-            return res.json({ sucesso: true, operacao: "editado" });
-        }
         await db.query(
-            `CALL novoLote($1, $2, $3, $4, $5);`,
-            [lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status]
+            `CALL novoLote($1, $2, $3, $4, $5)`,
+            [dados.nome, dados.genetica, dados.quantidade, dados.dataCriacao, dados.status]
         );
-        res.json({ sucesso: true, operacao: "criado" });
+        return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        res.status(500).json({ sucesso: false, erro: "Erro ao salvar lote." });
+        console.error("ERRO SQL:", err);
+        return res.status(500).json({ erro: "Erro ao salvar lote" });
+    }
+});
+
+app.put('/lotes/:id', async (req, res) => {
+    const id = req.params.id;
+    const dados = req.body;
+    try {
+        await db.query(
+            `CALL editaLote($1, $2, $3, $4, $5, $6)`,
+            [id, dados.nome, dados.genetica, dados.quantidade, dados.dataCriacao, dados.status]
+        );
+        return res.json({ sucesso: true, operacao: "editado" });
+    } catch (err) {
+        console.error("ERRO SQL:", err);
+        return res.status(500).json({ erro: "Erro ao editar lote" });
     }
 });
 
 app.delete('/lotes/:id', async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     try {
-        await db.query(`CALL excluirLote($1);`, [id]);
-        res.json({ sucesso: true, operacao: "excluido" });
+        await db.query(
+            `CALL excluirLote($1)`,
+            [id]
+        );
+        return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        res.status(500).json({ sucesso: false, erro: "Erro ao excluir lote." });
+        console.error("ERRO SQL:", err);
+        return res.status(500).json({ erro: "Erro ao excluir lote" });
     }
 });
 
-app.get('/lotes/nomes-geneticas', async (req, res) => {
-    try {
-        const { rows } = await db.query(`SELECT * FROM listaNomesGeneticas();`);
-        res.json({ sucesso: true, dados: rows });
-    } catch (err) {
-        res.status(500).json({ sucesso: false, erro: "Erro ao buscar nomes de genéticas." });
-    }
-});
+
 
 // SERVIDOR 
 app.listen(3000, () => console.log("Backend rodando na porta 3000"));

@@ -3,74 +3,77 @@
 
 "use strict";
 
-// --- DADOS MOCADOS (Simulação de BD de Lançamentos) ---
-let mockLancamentos = [
-    { 
-        id: 1, 
-        data: "2025-10-20", 
-        descricao: "Compra de ração - Lote A", 
-        tipo: "saida", 
-        valor: 1500.75,
-        categoria: "alimentacao"
-    },
-    { 
-        id: 2, 
-        data: "2025-10-22", 
-        descricao: "Venda de 50 animais", 
-        tipo: "entrada", 
-        valor: 25000.00,
-        categoria: "venda_animais"
-    },
-    { 
-        id: 3, 
-        data: "2025-10-23", 
-        descricao: "Pagamento vacinas", 
-        tipo: "saida", 
-        valor: 350.00,
-        categoria: "medicamentos"
-    }
-];
-let proximoLancamentoId = 4;
+// CONFIGURAÇÃO DA API
+const API_URL = 'http://localhost:3000';
 
-// --- API SIMULADA (async/await) ---
-const SIMULATED_DELAY_FINANCEIRO = 200;
+// --- API REAL (Integração com Back-end) ---
 
+/**
+ * Busca a lista de lançamentos financeiros do servidor.
+ */
 async function fetchLancamentos() {
-    console.log("BACKEND (SIM): Buscando lançamentos financeiros...");
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve([...mockLancamentos]); 
-        }, SIMULATED_DELAY_FINANCEIRO);
-    });
+    console.log("BACKEND (REAL): Buscando lançamentos financeiros...");
+    try {
+        const response = await fetch(`${API_URL}/financeiro`);
+        const data = await response.json();
+
+        if (data.sucesso) {
+            return data.dados;
+        } else {
+            console.error("Erro ao buscar lançamentos:", data.erro);
+            return [];
+        }
+    } catch (error) {
+        console.error("Erro de conexão:", error);
+        mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        return [];
+    }
 }
 
+/**
+ * Salva um novo lançamento financeiro.
+ * (Neste módulo, por enquanto, temos apenas criação, sem edição)
+ */
 async function saveLancamento(dadosLancamento) {
-    console.log("BACKEND (SIM): Salvando lançamento...", dadosLancamento);
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // (Não temos edição neste módulo, apenas criação)
-            const novoLancamento = {
-                id: proximoLancamentoId++,
-                data: dadosLancamento.data,
-                descricao: dadosLancamento.descricao,
-                tipo: dadosLancamento.tipo,
-                valor: dadosLancamento.valor,
-                categoria: dadosLancamento.categoria
-            };
-            mockLancamentos.push(novoLancamento);
-            resolve({ success: true, data: novoLancamento });
-        }, SIMULATED_DELAY_FINANCEIRO);
+    console.log("BACKEND (REAL): Salvando lançamento...", dadosLancamento);
+    
+    // O servidor espera: { data, descricao, valor, tipo, categoria }
+    // O objeto dadosLancamento já deve estar nesse formato.
+    
+    const response = await fetch(`${API_URL}/financeiro`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dadosLancamento)
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+        throw new Error(resultado.erro || "Erro ao salvar lançamento.");
+    }
+
+    return resultado;
 }
 
+/**
+ * Exclui um lançamento pelo ID.
+ */
 async function deleteLancamento(id) {
-    console.log("BACKEND (SIM): Excluindo lançamento ID:", id);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            mockLancamentos = mockLancamentos.filter(l => l.id !== id);
-            resolve({ success: true });
-        }, SIMULATED_DELAY_FINANCEIRO);
+    console.log("BACKEND (REAL): Excluindo lançamento ID:", id);
+    
+    const response = await fetch(`${API_URL}/financeiro/${id}`, {
+        method: 'DELETE'
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+        throw new Error(resultado.erro || "Erro ao excluir lançamento.");
+    }
+
+    return resultado;
 }
 
 
@@ -87,6 +90,11 @@ async function inicializarModuloFinanceiro() {
 
     // Carrega os dados iniciais
     await carregarLancamentos();
+
+    // Define a data de hoje como padrão no formulário ao carregar
+    const hoje = new Date().toISOString().split('T')[0];
+    const inputData = document.getElementById('lancamento-data');
+    if (inputData) inputData.value = hoje;
 
     // Listener para o formulário de NOVO lançamento
     formNovoLancamento.addEventListener('submit', async (e) => {
@@ -112,29 +120,29 @@ async function inicializarModuloFinanceiro() {
         try {
             await saveLancamento(dados);
             await carregarLancamentos(); // Recarrega a tabela
+            
             formNovoLancamento.reset();
-            // Define a data de hoje como padrão após salvar
+            // Restaura a data de hoje após o reset
             document.getElementById('lancamento-data').value = new Date().toISOString().split('T')[0];
+            
             mostrarNotificacao('Sucesso!', `Lançamento de ${formatarMoeda(dados.valor)} salvo.`);
         } catch (error) {
             mostrarNotificacao('Erro ao Salvar', error.message);
+        } finally {
+            btnSalvarNovoLancamento.disabled = false;
+            btnSalvarNovoLancamento.textContent = 'Salvar Lançamento';
         }
-
-        btnSalvarNovoLancamento.disabled = false;
-        btnSalvarNovoLancamento.textContent = 'Salvar Lançamento';
     });
 
     // Listener para os botões na TABELA (Excluir)
-    tabelaBody.addEventListener('click', (e) => {
-        const deleteId = e.target.dataset.deleteId;
-
-        if (deleteId) {
-            handleExcluirLancamento(Number(deleteId));
-        }
-    });
-    
-    // Define a data de hoje como padrão no formulário ao carregar
-    document.getElementById('lancamento-data').value = new Date().toISOString().split('T')[0];
+    if (tabelaBody) {
+        tabelaBody.addEventListener('click', (e) => {
+            const deleteId = e.target.dataset.deleteId;
+            if (deleteId) {
+                handleExcluirLancamento(Number(deleteId));
+            }
+        });
+    }
 }
 
 
@@ -148,58 +156,84 @@ async function carregarLancamentos() {
     if (!tabelaBody) return; 
     
     tabelaBody.innerHTML = '<tr><td colspan="6">Carregando lançamentos...</td></tr>';
+    
     const lancamentos = await fetchLancamentos();
+    
     // Ordena por data, mais recentes primeiro
-    lancamentos.sort((a, b) => new Date(b.data) - new Date(a.data));
+    // Adaptação para garantir que ordena independente se vier data ISO ou timestamp
+    lancamentos.sort((a, b) => {
+        const dataA = new Date(a.data);
+        const dataB = new Date(b.data);
+        return dataB - dataA;
+    });
 
     tabelaBody.innerHTML = ''; // Limpa o "Carregando"
-    if (lancamentos.length === 0) {
+    
+    if (!lancamentos || lancamentos.length === 0) {
         tabelaBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum lançamento financeiro registrado.</td></tr>';
         return;
     }
 
     lancamentos.forEach(item => {
         const tr = document.createElement('tr');
-        // Adiciona classe 'entrada' ou 'saida' para estilização futura
+        // Adiciona classe 'entrada' ou 'saida' para estilização visual (verde/vermelho)
         tr.className = item.tipo === 'entrada' ? 'linha-entrada' : 'linha-saida';
         
+        // Formata a data (cortando o T se vier ISO)
+        const dataFormatada = formatarData(item.data ? item.data.toString().split('T')[0] : '');
+
         tr.innerHTML = `
-            <td>${formatarData(item.data)}</td>
+            <td>${dataFormatada}</td>
             <td>${item.descricao}</td>
             <td>${formatarMoeda(item.valor)}</td>
             <td><span class="status-badge status-${item.tipo}">${item.tipo}</span></td>
             <td><span class="status-badge status-categoria">${item.categoria}</span></td>
             <td>
-                <!-- (Não implementamos edição para lançamentos financeiros, apenas exclusão) -->
+                <!-- Apenas exclusão implementada neste módulo -->
                 <button class="btn btn-danger btn-small" data-delete-id="${item.id}">Excluir</button>
             </td>
         `;
         tabelaBody.appendChild(tr);
     });
-
-    // (Futuramente, podemos adicionar uma função atualizarSaldo() aqui)
 }
 
 /**
  * Lida com o clique no botão "Excluir".
  * @param {number} id - O ID do lançamento a ser excluído.
  */
-function handleExcluirLancamento(id) {
-    // Acha o item para mostrar o nome no popup
-    const item = mockLancamentos.find(l => l.id === id);
-    const nomeItem = item ? `${item.descricao} (${formatarMoeda(item.valor)})` : `ID ${id}`;
+async function handleExcluirLancamento(id) {
+    // Para confirmar o nome, precisamos buscar o item.
+    // Como não temos os dados locais persistidos globalmente, buscamos novamente.
+    // Em um app maior, usaríamos um State Manager.
+    let nomeItem = `ID ${id}`;
+    
+    try {
+        const lancamentos = await fetchLancamentos();
+        const item = lancamentos.find(l => l.id == id);
+        if (item) {
+            nomeItem = `${item.descricao} (${formatarMoeda(item.valor)})`;
+        }
+    } catch (e) {
+        console.warn("Não foi possível buscar detalhes para confirmação.");
+    }
 
     // Define a função de callback que será executada na confirmação
     const onConfirm = async () => {
         try {
             await deleteLancamento(id);
             await carregarLancamentos(); // Recarrega a tabela
-            mostrarNotificacao('Sucesso!', `Lançamento "${nomeItem}" foi excluído.`);
+            mostrarNotificacao('Sucesso!', 'Lançamento excluído com sucesso.');
         } catch (error) {
             mostrarNotificacao('Erro ao Excluir', error.message);
         }
     };
 
     // Chama o modal de confirmação global
-    mostrarConfirmacao('lançamento', id, nomeItem, onConfirm);
+    if (typeof mostrarConfirmacao === 'function') {
+        mostrarConfirmacao('lançamento', id, nomeItem, onConfirm);
+    } else {
+        if (confirm(`Tem certeza que deseja excluir o lançamento: ${nomeItem}?`)) {
+            onConfirm();
+        }
+    }
 }

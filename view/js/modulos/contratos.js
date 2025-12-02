@@ -1,76 +1,97 @@
-// Arquivo: js/modulos/contratos.js
 // Módulo para gerenciar o CRUD de Contratos (Admin) e
 // a visualização de Contratos (Vet, Funcionario).
 
 "use strict";
 
-// --- DADOS MOCADOS (Simulação de BD de Contratos) ---
-let mockContratos = [
-    {
-        id: 1,
-        fornecedor: "AgroCereais S.A.",
-        objeto: "Fornecimento de 10T de milho/mês",
-        dataInicio: "2024-01-01",
-        dataVencimento: "2025-01-01"
-    },
-    {
-        id: 2,
-        fornecedor: "GenetiPorc Ltda.",
-        objeto: "Aquisição de material genético (Sêmen Duroc)",
-        dataInicio: "2024-06-01",
-        dataVencimento: "2024-12-31"
-    },
-    {
-        id: 3,
-        fornecedor: "TransGrãos Cargas",
-        objeto: "Transporte de grãos (Silo -> Granja)",
-        dataInicio: "2023-03-01",
-        dataVencimento: "2024-03-01" // Vencido
-    }
-];
-let proximoContratoId = 4;
+// CONFIGURAÇÃO DA API
+const API_URL = 'http://localhost:3000';
+
+// Variáveis de Estado
 let contratoEditando = null;
 
-// --- API SIMULADA (async/await) ---
-const SIMULATED_DELAY_CONTRATOS = 200;
+// --- API REAL (Integração com Back-end) ---
 
+/**
+ * Busca a lista de contratos do servidor.
+ */
 async function fetchContratos() {
-    console.log("BACKEND (SIM): Buscando contratos...");
-    return new Promise(resolve => {
-        setTimeout(() => resolve([...mockContratos]), SIMULATED_DELAY_CONTRATOS);
-    });
+    console.log("BACKEND (REAL): Buscando contratos...");
+    try {
+        const response = await fetch(`${API_URL}/contratos`);
+        const data = await response.json();
+
+        if (data.sucesso) {
+            return data.dados;
+        } else {
+            console.error("Erro ao buscar contratos:", data.erro);
+            return [];
+        }
+    } catch (error) {
+        console.error("Erro de conexão:", error);
+        mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        return [];
+    }
 }
 
+/**
+ * Salva (cria ou atualiza) um contrato.
+ */
 async function saveContrato(dadosContrato) {
-    console.log("BACKEND (SIM): Salvando contrato...", dadosContrato);
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // ATUALIZAÇÃO
-            if (dadosContrato.id) {
-                const index = mockContratos.findIndex(c => c.id === dadosContrato.id);
-                if (index !== -1) {
-                    mockContratos[index] = { ...mockContratos[index], ...dadosContrato };
-                    resolve({ success: true, data: mockContratos[index] });
-                }
-            } 
-            // CRIAÇÃO
-            else {
-                const novoContrato = { ...dadosContrato, id: proximoContratoId++ };
-                mockContratos.push(novoContrato);
-                resolve({ success: true, data: novoContrato });
-            }
-        }, SIMULATED_DELAY_CONTRATOS);
+    console.log("BACKEND (REAL): Salvando contrato...", dadosContrato);
+
+    const { id, fornecedor, objeto, dataInicio, dataVencimento } = dadosContrato;
+
+    // Define se é criação (POST) ou edição (PUT)
+    const metodo = id ? 'PUT' : 'POST';
+    
+    // Constrói a URL correta
+    let url = `${API_URL}/contratos`;
+    if (id) {
+        url = `${API_URL}/contratos/${id}`;
+    }
+
+    // O servidor espera exatamente estas chaves no JSON
+    const body = {
+        fornecedor,
+        objeto,
+        dataInicio,
+        dataVencimento
+    };
+
+    const response = await fetch(url, {
+        method: metodo,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+        throw new Error(resultado.erro || "Erro ao salvar contrato.");
+    }
+
+    return resultado;
 }
 
+/**
+ * Exclui um contrato pelo ID.
+ */
 async function deleteContrato(id) {
-    console.log("BACKEND (SIM): Excluindo contrato ID:", id);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            mockContratos = mockContratos.filter(c => c.id !== id);
-            resolve({ success: true });
-        }, SIMULATED_DELAY_CONTRATOS);
+    console.log("BACKEND (REAL): Excluindo contrato ID:", id);
+    
+    const response = await fetch(`${API_URL}/contratos/${id}`, {
+        method: 'DELETE'
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+        throw new Error(resultado.erro || "Erro ao excluir contrato.");
+    }
+
+    return resultado;
 }
 
 
@@ -85,7 +106,6 @@ async function inicializarModuloContratos() {
     const btnCancelarModalContrato = document.getElementById('btn-cancelar-modal-contrato');
     
     // Seletores (Admin View)
-    // Usamos querySelectorAll para pegar todos os elementos que só o admin vê
     const adminViews = document.querySelectorAll('#contratos-section .admin-view');
     const tabelaBodyContratos = document.getElementById('tabela-contratos');
 
@@ -110,7 +130,9 @@ async function inicializarModuloContratos() {
         });
 
         // Listeners do Admin
-        btnAbrirModalContrato.addEventListener('click', () => abrirModalContrato(null));
+        if (btnAbrirModalContrato) {
+            btnAbrirModalContrato.addEventListener('click', () => abrirModalContrato(null));
+        }
         
         tabelaBodyContratos.addEventListener('click', (e) => {
             const editId = e.target.dataset.editId;
@@ -121,12 +143,14 @@ async function inicializarModuloContratos() {
     }
 
     // --- Listeners Comuns (Modal) ---
-    formContrato.addEventListener('submit', handleSalvarContrato);
-    btnFecharModalContrato.addEventListener('click', fecharModalContrato);
-    btnCancelarModalContrato.addEventListener('click', fecharModalContrato);
-    modalContrato.addEventListener('click', (e) => {
-        if (e.target === modalContrato) fecharModalContrato();
-    });
+    if (formContrato) formContrato.addEventListener('submit', handleSalvarContrato);
+    if (btnFecharModalContrato) btnFecharModalContrato.addEventListener('click', fecharModalContrato);
+    if (btnCancelarModalContrato) btnCancelarModalContrato.addEventListener('click', fecharModalContrato);
+    if (modalContrato) {
+        modalContrato.addEventListener('click', (e) => {
+            if (e.target === modalContrato) fecharModalContrato();
+        });
+    }
 }
 
 
@@ -141,33 +165,51 @@ async function carregarContratos(perfil) {
     if (!tabelaBody) return;
     
     tabelaBody.innerHTML = '<tr><td colspan="6">Carregando contratos...</td></tr>';
+    
+    // Busca dados reais
     const contratos = await fetchContratos();
     const hoje = new Date();
     
     // Ordena por data de vencimento (mais próximos primeiro)
-    contratos.sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento));
+    // OBS: O Postgres pode retornar dataVencimento ou datavencimento (case sensitive no JS)
+    // Vamos garantir que acessamos a propriedade correta.
+    contratos.sort((a, b) => {
+        const dataA = new Date(a.dataVencimento || a.datavencimento);
+        const dataB = new Date(b.dataVencimento || b.datavencimento);
+        return dataA - dataB;
+    });
 
     tabelaBody.innerHTML = '';
-    if (contratos.length === 0) {
+    if (!contratos || contratos.length === 0) {
         tabelaBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum contrato cadastrado.</td></tr>';
         return;
     }
 
     contratos.forEach(contrato => {
+        // Adaptação para garantir leitura independente de como o banco retorna (camelCase ou snake_case)
+        const id = contrato.id;
+        const fornecedor = contrato.fornecedor;
+        const objeto = contrato.objeto;
+        // O banco retorna strings ISO (ex: 2024-01-01T00:00:00.000Z) ou strings simples
+        const dtInicio = contrato.dataInicio || contrato.datainicio;
+        const dtVenc = contrato.dataVencimento || contrato.datavencimento;
+
         const tr = document.createElement('tr');
-        const dataVenc = new Date(contrato.dataVencimento + 'T00:00:00'); // Trata como data local
+        
+        // Verifica se a data é válida antes de criar o objeto Date
+        const dataVencObj = new Date(dtVenc);
         
         let statusBadge = '<span class="status-badge status-ativo">Vigente</span>';
-        // Verifica se está vencido
-        if (dataVenc < hoje) {
+        // Compara timestamps
+        if (dataVencObj.getTime() < hoje.getTime()) {
             statusBadge = '<span class="status-badge status-inativo">Vencido</span>';
         }
 
         tr.innerHTML = `
-            <td>${contrato.fornecedor}</td>
-            <td>${contrato.objeto}</td>
-            <td>${formatarData(contrato.dataInicio)}</td>
-            <td>${formatarData(contrato.dataVencimento)}</td>
+            <td>${fornecedor}</td>
+            <td>${objeto}</td>
+            <td>${formatarData(dtInicio)}</td>
+            <td>${formatarData(dtVenc)}</td>
             <td>${statusBadge}</td>
         `;
 
@@ -175,8 +217,8 @@ async function carregarContratos(perfil) {
         if (perfil === 'admin') {
             tr.innerHTML += `
                 <td>
-                    <button class="btn btn-info btn-small" data-edit-id="${contrato.id}">Editar</button>
-                    <button class="btn btn-danger btn-small" data-delete-id="${contrato.id}">Excluir</button>
+                    <button class="btn btn-info btn-small" data-edit-id="${id}">Editar</button>
+                    <button class="btn btn-danger btn-small" data-delete-id="${id}">Excluir</button>
                 </td>
             `;
         }
@@ -196,16 +238,25 @@ async function abrirModalContrato(id) {
     form.reset();
     
     if (id) {
-        // Modo Edição
-        const contratos = await fetchContratos(); // Busca os dados mais recentes
-        contratoEditando = contratos.find(c => c.id === id);
+        // Modo Edição: Buscamos o contrato atualizado do servidor ou da lista em memória
+        // Para simplificar e garantir dados frescos, fazemos um fetch de todos e filtramos,
+        // mas idealmente teríamos um endpoint GET /contratos/:id
+        const contratos = await fetchContratos(); 
+        contratoEditando = contratos.find(c => c.id == id); // == para pegar string vs number
+        
         if (contratoEditando) {
             document.getElementById('titulo-modal-contrato').textContent = 'Editar Contrato';
             document.getElementById('contrato-id-original').value = contratoEditando.id;
             document.getElementById('contrato-fornecedor').value = contratoEditando.fornecedor;
             document.getElementById('contrato-objeto').value = contratoEditando.objeto;
-            document.getElementById('contrato-data-inicio').value = contratoEditando.dataInicio;
-            document.getElementById('contrato-data-vencimento').value = contratoEditando.dataVencimento;
+            
+            // Ajuste de data para o input type="date" (YYYY-MM-DD)
+            // O banco pode retornar data completa ISO. Precisamos cortar.
+            const dtInicio = contratoEditando.dataInicio || contratoEditando.datainicio;
+            const dtVenc = contratoEditando.dataVencimento || contratoEditando.datavencimento;
+
+            document.getElementById('contrato-data-inicio').value = dtInicio ? dtInicio.split('T')[0] : '';
+            document.getElementById('contrato-data-vencimento').value = dtVenc ? dtVenc.split('T')[0] : '';
         }
     } else {
         // Modo Criação
@@ -213,11 +264,13 @@ async function abrirModalContrato(id) {
         document.getElementById('contrato-id-original').value = '';
     }
 
-    document.getElementById('modal-contrato').style.display = 'block';
+    const modal = document.getElementById('modal-contrato');
+    if(modal) modal.style.display = 'block';
 }
 
 function fecharModalContrato() {
-    document.getElementById('modal-contrato').style.display = 'none';
+    const modal = document.getElementById('modal-contrato');
+    if(modal) modal.style.display = 'none';
     contratoEditando = null;
 }
 
@@ -227,8 +280,10 @@ function fecharModalContrato() {
 async function handleSalvarContrato(e) {
     e.preventDefault();
     
+    const idOriginal = document.getElementById('contrato-id-original').value;
+
     const dados = {
-        id: document.getElementById('contrato-id-original').value ? Number(document.getElementById('contrato-id-original').value) : null,
+        id: idOriginal ? Number(idOriginal) : null,
         fornecedor: document.getElementById('contrato-fornecedor').value,
         objeto: document.getElementById('contrato-objeto').value,
         dataInicio: document.getElementById('contrato-data-inicio').value,
@@ -240,6 +295,12 @@ async function handleSalvarContrato(e) {
         return;
     }
 
+    const btnSalvar = document.querySelector('#form-contrato button[type="submit"]');
+    if(btnSalvar) {
+        btnSalvar.disabled = true;
+        btnSalvar.textContent = 'Salvando...';
+    }
+
     try {
         await saveContrato(dados);
         await carregarContratos(localStorage.getItem('perfilUsuario')); // Recarrega a tabela
@@ -247,6 +308,11 @@ async function handleSalvarContrato(e) {
         mostrarNotificacao('Sucesso!', `Contrato com "${dados.fornecedor}" salvo.`);
     } catch (error) {
         mostrarNotificacao('Erro ao Salvar', error.message);
+    } finally {
+        if(btnSalvar) {
+            btnSalvar.disabled = false;
+            btnSalvar.textContent = 'Salvar';
+        }
     }
 }
 
@@ -254,21 +320,24 @@ async function handleSalvarContrato(e) {
  * (ADMIN) Lida com o clique no botão "Excluir".
  * @param {number} id - O ID do contrato a ser excluído.
  */
-async function handleExcluirContrato(id) {
-    const contratos = await fetchContratos();
-    const item = contratos.find(c => c.id === id);
-    if (!item) return;
-
+function handleExcluirContrato(id) {
+    // Busca rápida apenas para mostrar o nome na confirmação (opcional)
+    // Se quiser performance máxima, pode passar o nome via parâmetro no botão
     const onConfirm = async () => {
         try {
             await deleteContrato(id);
-            await carregarContratos(localStorage.getItem('perfilUsuario')); // Recarrega a tabela
-            mostrarNotificacao('Sucesso!', `Contrato "${item.objeto}" foi excluído.`);
+            await carregarContratos(localStorage.getItem('perfilUsuario')); 
+            mostrarNotificacao('Sucesso!', 'Contrato excluído.');
         } catch (error) {
             mostrarNotificacao('Erro ao Excluir', error.message);
         }
     };
 
-    // Chama o modal de confirmação global (definido no app.js)
-    mostrarConfirmacao('contrato', id, item.objeto, onConfirm);
+    if (typeof mostrarConfirmacao === 'function') {
+        mostrarConfirmacao('contrato', id, 'este item', onConfirm);
+    } else {
+        if(confirm(`Tem certeza que deseja excluir o contrato ID ${id}?`)) {
+            onConfirm();
+        }
+    }
 }

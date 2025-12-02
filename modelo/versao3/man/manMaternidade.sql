@@ -1,4 +1,4 @@
-
+// comentário Keila: Está errado os comandos, é tudo minusculo.
 CALL novoRegistroMaternidade(
 	brincoFemea VARCHAR(10),
 	genetica VARCHAR(50),

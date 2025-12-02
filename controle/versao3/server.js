@@ -598,6 +598,82 @@ app.delete('/lotes/:id', async (req, res) => {
     }
 });
 
+//MATERNIDADE
+
+
+app.get('/maternidades', async (req, res) => {
+    try {
+        let { genetica, status } = req.query;
+        genetica = (genetica === "" || genetica === "todos") ? null : genetica;
+        status = (status === "" || status === "todos") ? null : status;
+
+        const resultado = await db.query(
+            `SELECT * FROM buscaMaternidade($1, $2);`,
+            [genetica, status]
+        );
+
+        return res.json({ sucesso: true, dados: resultado.rows });
+    } catch (err) {
+        console.error("Erro ao buscar maternidades:", err);
+        return res.status(500).json({ sucesso: false, erro: "Erro ao buscar maternidades." });
+    }
+});
+
+
+app.post('/maternidades', async (req, res) => {
+  const materData = req.body;
+
+  try {
+    if (materData.id) {
+      await db.query(
+        `CALL editarregistromaternidade($1, $2, $3, $4, $5, $6, $7);`,
+        [
+          materData.id,
+          materData.brincoFemea,
+          materData.genetica,
+          materData.dataCobertura,
+          materData.dataPartoPrevisto,
+          materData.qtdeLeitoes,
+          materData.status || 'disponivel'
+        ]
+      );
+      return res.json({ sucesso: true, operacao: "editado" });
+    }
+
+    await db.query(
+      `CALL novoregistromaternidade($1, $2, $3, $4, $5, $6);`,
+      [
+        materData.brincoFemea,
+        materData.genetica,
+        materData.dataCobertura,
+        materData.dataPartoPrevisto,
+        materData.qtdeLeitoes,
+        materData.status || 'disponivel'
+      ]
+    );
+
+    res.json({ sucesso: true, operacao: "criado" });
+
+  } catch (err) {
+    console.error("Erro ao salvar maternidade:", err);
+    res.status(500).json({ sucesso: false, erro: "Erro ao salvar maternidade." });
+  }
+});
+
+app.delete('/maternidades/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db.query(
+      `CALL excluirregistromaternidade($1);`,
+      [id]
+    );
+    res.json({ sucesso: true, operacao: "excluido" });
+  } catch (err) {
+    console.error("Erro ao excluir maternidade:", err);
+    res.status(500).json({ sucesso: false, erro: "Erro ao excluir maternidade." });
+  }
+});
 
 
 // SERVIDOR 

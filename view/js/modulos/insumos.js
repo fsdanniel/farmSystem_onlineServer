@@ -1,11 +1,16 @@
 // Arquivo: js/modulos/insumos.js
 // Módulo responsável pela lógica da seção "Gestão de Insumos"
-// VERSÃO 2.0 (Refatorado com API Simulada async/await e Callbacks)
+// VERSÃO 3.0 (Integrado com API Real)
 
 "use strict";
 
-// === DADOS MOCADOS (Simulação de BD) ===
-let mockTiposDeInsumo = [
+// CONFIGURAÇÃO DA API
+const API_URL = 'http://localhost:3000';
+
+// === CONFIGURAÇÃO (Front-end) ===
+// Mantemos essa lista aqui para popular o Select, já que o banco 
+// armazena o nome/texto do insumo nas procedures atuais.
+const TIPOS_INSUMO = [
     { id: 'milho_kg', nome: 'Milho (em grão)', unidade: 'kg' },
     { id: 'soja_kg', nome: 'Farelo de Soja', unidade: 'kg' },
     { id: 'nucleo_cresc_kg', nome: 'Núcleo Crescimento', unidade: 'kg' },
@@ -13,71 +18,116 @@ let mockTiposDeInsumo = [
     { id: 'medicamento_un', nome: 'Medicamento X', unidade: 'Un' }
 ];
 
-let mockHistoricoCompras = [
-    { compraId: 1678886400000, insumoId: 'milho_kg', data: '2025-10-01', quantidade: 500, fornecedor: 'AgroCereais', custo: 750.00 },
-    { compraId: 1678886500000, insumoId: 'soja_kg', data: '2025-10-02', quantidade: 300, fornecedor: 'SojaBrasil', custo: 900.00 },
-    { compraId: 1678886600000, insumoId: 'milho_kg', data: '2025-10-15', quantidade: 250, fornecedor: 'AgroCereais', custo: 380.00 }
-];
+// === API REAL (Integração) ===
 
+/**
+ * Busca o histórico de compras do servidor.
+ */
+async function fetchHistoricoCompras() {
+    console.log("BACKEND (REAL): Buscando histórico de compras...");
+    try {
+        const response = await fetch(`${API_URL}/insumos/historico`);
+        const data = await response.json();
 
-// === API SIMULADA (async/await) ===
-
-const SIMULATED_DELAY_INSUMOS = 200;
-
-async function fetchTiposDeInsumo() {
-    console.log("BACKEND (SIM): Buscando tipos de insumo...");
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(mockTiposDeInsumo);
-        }, SIMULATED_DELAY_INSUMOS); 
-    });
+        if (data.sucesso) {
+            // O servidor retorna colunas em minúsculo (padrão Postgres)
+            // Vamos garantir que os nomes batam com o que o renderizador espera
+            // ou adaptar o renderizador. Aqui, retornamos os dados crus do banco.
+            return data.dados; 
+        } else {
+            console.error("Erro ao buscar histórico:", data.erro);
+            return [];
+        }
+    } catch (error) {
+        console.error("Erro de conexão:", error);
+        mostrarNotificacao('Erro', 'Erro ao buscar histórico.');
+        return [];
+    }
 }
 
-async function fetchHistoricoCompras() {
-    console.log("BACKEND (SIM): Buscando histórico de compras...");
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve([...mockHistoricoCompras]);
-        }, SIMULATED_DELAY_INSUMOS);
-    });
+/**
+ * Busca o estoque consolidado direto do servidor.
+ */
+async function fetchEstoque() {
+    console.log("BACKEND (REAL): Buscando estoque atual...");
+    try {
+        const response = await fetch(`${API_URL}/insumos/estoque`);
+        const data = await response.json();
+        
+        if (data.sucesso) {
+            return data.dados;
+        } else {
+            console.error("Erro ao buscar estoque:", data.erro);
+            return [];
+        }
+    } catch (error) {
+        console.error("Erro de conexão:", error);
+        return [];
+    }
 }
 
 async function saveCompra(novaCompra) {
-    console.log("BACKEND (SIM): Salvando nova compra...", novaCompra);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            mockHistoricoCompras.push(novaCompra);
-            resolve({ success: true, data: novaCompra });
-        }, SIMULATED_DELAY_INSUMOS); 
+    console.log("BACKEND (REAL): Salvando nova compra...", novaCompra);
+    
+    // O backend espera: { nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro }
+    // Precisamos mapear os campos do formulário para o formato da API
+    
+    // 1. Descobrir o NOME do insumo baseado no ID selecionado
+    const tipoInsumo = TIPOS_INSUMO.find(t => t.id === novaCompra.insumoId);
+    const nomeReal = tipoInsumo ? tipoInsumo.nome : novaCompra.insumoId;
+
+    const body = {
+        nome: nomeReal,
+        dataCompra: novaCompra.data,
+        quantidade: novaCompra.quantidade,
+        nomeFornecedor: novaCompra.fornecedor,
+        custoTotal: novaCompra.custo,
+        statusRegistro: 'ativo'
+    };
+
+    const response = await fetch(`${API_URL}/insumos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+        throw new Error(resultado.erro || "Erro ao salvar compra.");
+    }
+
+    return resultado;
 }
 
 async function deleteCompra(compraId) {
-    console.log("BACKEND (SIM): Excluindo compra ID:", compraId);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            mockHistoricoCompras = mockHistoricoCompras.filter(compra => compra.compraId !== compraId);
-            resolve({ success: true });
-        }, SIMULATED_DELAY_INSUMOS);
+    console.log("BACKEND (REAL): Excluindo compra ID:", compraId);
+    
+    const response = await fetch(`${API_URL}/insumos/${compraId}`, {
+        method: 'DELETE'
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+        throw new Error(resultado.erro || "Erro ao excluir compra.");
+    }
+
+    return resultado;
 }
 
 
 // === FUNÇÕES DO MÓDULO ===
 
-// Seletores do Módulo Insumos (serão capturados no init)
+// Seletores globais do módulo
 let formCompra, selectInsumo, inputData, inputQuantidade, inputFornecedor, inputCusto, botaoRegistrar;
 let tbodyEstoqueAtual, tbodyHistoricoCompras;
 
 /**
- * Função principal de inicialização do módulo de Insumos.
- * É chamada pelo app.js (DOMContentLoaded).
+ * Inicializa o módulo.
  */
 async function inicializarModuloInsumos() {
-    // Captura os seletores do DOM
     formCompra = document.getElementById('form-compra');
-    
-    // Se o formulário não está na página, encerra a inicialização
     if (!formCompra) return;
     
     selectInsumo = document.getElementById('compra-insumo');
@@ -89,83 +139,102 @@ async function inicializarModuloInsumos() {
     tbodyEstoqueAtual = document.getElementById('tbody-estoque-atual');
     tbodyHistoricoCompras = document.getElementById('tbody-historico-compras');
 
-    // 1. Busca os tipos de insumo para popular o <select>
-    const tipos = await fetchTiposDeInsumo();
-    popularSelectInsumos(tipos);
+    // 1. Popula o select com a lista estática
+    popularSelectInsumos();
 
-    // 2. Busca o histórico e calcula o estoque inicial
+    // 2. Busca dados reais do servidor
     await atualizarTabelasInsumos();
 
-    // 3. Adiciona os listeners de eventos
+    // 3. Listeners
     formCompra.addEventListener('submit', handleRegistrarCompra);
     tbodyHistoricoCompras.addEventListener('click', handleExcluirCompra);
+    
+    // Data de hoje como padrão
+    if(inputData) inputData.value = new Date().toISOString().split('T')[0];
 }
 
-function popularSelectInsumos(tipos) {
+function popularSelectInsumos() {
     if (!selectInsumo) return;
-    selectInsumo.innerHTML = '<option value="">Selecione o insumo...</option>'; // Limpa
-    tipos.forEach(tipo => {
+    selectInsumo.innerHTML = '<option value="">Selecione o insumo...</option>'; 
+    TIPOS_INSUMO.forEach(tipo => {
         const option = document.createElement('option');
-        option.value = tipo.id;
-        option.textContent = tipo.nome;
+        option.value = tipo.id; // Mantemos o ID no value para controle interno
+        option.textContent = `${tipo.nome} (${tipo.unidade})`;
         selectInsumo.appendChild(option);
     });
 }
 
+/**
+ * Renderiza o histórico vindo do banco.
+ * O banco retorna colunas como: id, nome, datacompra, quantidade, nomefornecedor, custototal
+ */
 function renderizarHistoricoInsumos(compras) {
     if (!tbodyHistoricoCompras) return;
     tbodyHistoricoCompras.innerHTML = ''; 
 
-    if (compras.length === 0) {
+    if (!compras || compras.length === 0) {
         tbodyHistoricoCompras.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum registro de compra encontrado.</td></tr>';
         return;
     }
-    compras.sort((a, b) => new Date(b.data) - new Date(a.data)); // Mais recentes primeiro
+    
+    // O backend já deve retornar ordenado ou ordenamos aqui
+    // Adaptação para campos minúsculos do Postgres
+    compras.sort((a, b) => {
+        const dateA = new Date(a.datacompra || a.dataCompra);
+        const dateB = new Date(b.datacompra || b.dataCompra);
+        return dateB - dateA;
+    });
 
     compras.forEach(compra => {
-        const tipoInsumo = mockTiposDeInsumo.find(t => t.id === compra.insumoId) || { nome: 'Desconhecido' };
-        
+        const id = compra.id; // ID vindo do banco
+        const nome = compra.nome;
+        const data = formatarData((compra.datacompra || compra.dataCompra).split('T')[0]);
+        const qtd = compra.quantidade;
+        const fornecedor = compra.nomefornecedor || compra.nomeFornecedor || 'N/D';
+        const custo = compra.custototal || compra.custoTotal;
+
         const tr = document.createElement('tr');
-        // Usamos as classes de botão padronizadas (.btn, .btn-danger, .btn-small)
         tr.innerHTML = `
-            <td>${formatarData(compra.data)}</td>
-            <td>${tipoInsumo.nome}</td>
-            <td>${compra.quantidade}</td>
-            <td>${compra.fornecedor || 'N/D'}</td>
-            <td>${formatarMoeda(compra.custo)}</td>
+            <td>${data}</td>
+            <td>${nome}</td>
+            <td>${qtd}</td>
+            <td>${fornecedor}</td>
+            <td>${formatarMoeda(custo)}</td>
             <td>
-                <button class="btn btn-danger btn-small" data-delete-compra-id="${compra.compraId}">Excluir</button>
+                <button class="btn btn-danger btn-small" data-delete-compra-id="${id}">Excluir</button>
             </td>
         `;
         tbodyHistoricoCompras.appendChild(tr);
     });
 }
 
-function renderizarEstoqueAtual(compras) {
+/**
+ * Renderiza o estoque vindo da API (/insumos/estoque).
+ * Não calculamos mais no front!
+ */
+function renderizarEstoqueAtual(dadosEstoque) {
     if (!tbodyEstoqueAtual) return;
     tbodyEstoqueAtual.innerHTML = '';
 
-    const estoque = new Map();
-    compras.forEach(compra => {
-        const tipo = mockTiposDeInsumo.find(t => t.id === compra.insumoId);
-        if (!tipo) return;
-        if (!estoque.has(tipo.id)) {
-            estoque.set(tipo.id, { nome: tipo.nome, unidade: tipo.unidade, total: 0 });
-        }
-        const itemEmEstoque = estoque.get(tipo.id);
-        itemEmEstoque.total += compra.quantidade;
-    });
-
-    if (estoque.size === 0) {
-        tbodyEstoqueAtual.innerHTML = '<tr><td colspan="3" style="text-align: center;">Estoque vazio.</td></tr>';
+    if (!dadosEstoque || dadosEstoque.length === 0) {
+        tbodyEstoqueAtual.innerHTML = '<tr><td colspan="3" style="text-align: center;">Estoque vazio ou não calculado.</td></tr>';
         return;
     }
-    estoque.forEach(item => {
+
+    dadosEstoque.forEach(item => {
+        // O banco deve retornar: nome, total (quantidade somada)
+        // Tentamos deduzir a unidade pelo nome na nossa lista estática para exibir bonitinho
+        const tipoLocal = TIPOS_INSUMO.find(t => t.nome === item.nome);
+        const unidade = tipoLocal ? tipoLocal.unidade : 'un';
+        
+        // Se o banco retornar string numérico, converte para float
+        const total = parseFloat(item.total || item.quantidade || 0);
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${item.nome}</td>
-            <td>${item.total.toFixed(2)}</td>
-            <td>${item.unidade}</td>
+            <td>${total.toFixed(2)}</td>
+            <td>${unidade}</td>
         `;
         tbodyEstoqueAtual.appendChild(tr);
     });
@@ -175,72 +244,71 @@ async function handleRegistrarCompra(e) {
     e.preventDefault();
     
     const novaCompra = {
-        compraId: Date.now(),
-        insumoId: selectInsumo.value,
+        // Não geramos ID no front, o banco gera
+        insumoId: selectInsumo.value, // ID local (ex: milho_kg)
         data: inputData.value,
         quantidade: parseFloat(inputQuantidade.value),
         fornecedor: inputFornecedor.value.trim(),
         custo: parseFloat(inputCusto.value)
     };
 
-    // Validação
     if (!novaCompra.insumoId || !novaCompra.data || isNaN(novaCompra.quantidade) || novaCompra.quantidade <= 0) {
-        mostrarNotificacao('Erro!', 'Por favor, preencha o Insumo, Data e Quantidade corretamente.');
+        mostrarNotificacao('Erro!', 'Preencha os campos corretamente.');
         return;
     }
 
     botaoRegistrar.disabled = true;
     botaoRegistrar.textContent = 'Salvando...';
 
-    // Chama a API simulada
-    const response = await saveCompra(novaCompra);
-
-    if (response.success) {
+    try {
+        await saveCompra(novaCompra);
         await atualizarTabelasInsumos(); 
+        
         formCompra.reset();
-        mostrarNotificacao('Sucesso!', 'Compra registrada com sucesso.');
-    } else {
-        mostrarNotificacao('Erro!', 'Erro ao salvar a compra.');
+        if(inputData) inputData.value = new Date().toISOString().split('T')[0];
+        
+        mostrarNotificacao('Sucesso!', 'Compra registrada.');
+    } catch (error) {
+        mostrarNotificacao('Erro!', error.message);
+    } finally {
+        botaoRegistrar.disabled = false;
+        botaoRegistrar.textContent = 'Registrar Compra';
     }
-
-    botaoRegistrar.disabled = false;
-    botaoRegistrar.textContent = 'Registrar Compra';
 }
 
 async function handleExcluirCompra(e) {
-    // Usa event delegation para achar o botão
     const botao = e.target.closest('[data-delete-compra-id]');
     if (!botao) return; 
 
-    const compraId = parseInt(botao.dataset.deleteCompraId);
+    const compraId = botao.dataset.deleteCompraId; // ID pode ser string ou number vindo do banco
     
-    // Define a função de callback para a confirmação
     const onConfirm = async () => {
-        const response = await deleteCompra(compraId);
-        if (response.success) {
+        try {
+            await deleteCompra(compraId);
             await atualizarTabelasInsumos();
-            mostrarNotificacao('Excluído!', `O registro de compra (ID: ${compraId}) foi excluído.`);
-        } else {
-            mostrarNotificacao('Erro!', `Não foi possível excluir o registro.`);
+            mostrarNotificacao('Excluído!', 'Registro excluído.');
+        } catch (error) {
+            mostrarNotificacao('Erro!', error.message);
         }
     };
     
-    // Chama o modal de confirmação global (definido no app.js)
-    mostrarConfirmacao('registro de insumo', compraId, `ID ${compraId}`, onConfirm);
+    if (typeof mostrarConfirmacao === 'function') {
+        mostrarConfirmacao('registro de insumo', compraId, `ID ${compraId}`, onConfirm);
+    } else {
+        if(confirm(`Excluir registro ID ${compraId}?`)) onConfirm();
+    }
 }
 
 /**
- * Função central para buscar dados "do backend" e atualizar a UI de Insumos.
+ * Função central para buscar dados e atualizar UI.
  */
 async function atualizarTabelasInsumos() {
-    // Busca os dados mais recentes (em paralelo)
-    const [compras, tipos] = await Promise.all([
+    // Busca Histórico e Estoque em paralelo
+    const [historico, estoque] = await Promise.all([
         fetchHistoricoCompras(),
-        fetchTiposDeInsumo() // Recarrega os tipos caso tenham mudado
+        fetchEstoque()
     ]);
     
-    popularSelectInsumos(tipos);
-    renderizarHistoricoInsumos(compras);
-    renderizarEstoqueAtual(compras);
+    renderizarHistoricoInsumos(historico);
+    renderizarEstoqueAtual(estoque);
 }
-

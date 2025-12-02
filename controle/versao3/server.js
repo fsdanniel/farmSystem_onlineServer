@@ -537,7 +537,127 @@ app.delete('/geneticas/:id', async (req, res) => {
     }
 });
 
-//
+// INSEMINAÇÃO
+
+app.get('/inseminacoes', async (req, res) => {
+    try {
+        const dados = await db.query(
+            `SELECT insem_id, insem_brincofemea, insem_geneticamacho, insem_datainseminacao, insem_tecnica, insem_resultado, insem_dataverificacao 
+             FROM inseminacao 
+             WHERE insem_statusregistro = true 
+             ORDER BY insem_datainseminacao DESC;`
+        );
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar inseminações." });
+    }
+});
+
+app.post('/inseminacoes', async (req, res) => {
+    const insData = req.body;
+    try {
+        if (insData.id) {
+            await db.query(
+                `CALL editarRegistroInseminacao($1, $2, $3, $4, $5, $6, $7);`,
+                [
+                    insData.id,
+                    insData.brincoFemea,
+                    insData.geneticaMacho,
+                    insData.dataInseminacao,
+                    insData.tecnica,
+                    insData.resultado,
+                    insData.dataVerificacao
+                ]
+            );
+            return res.json({ sucesso: true, operacao: "editado" });
+        }
+
+        await db.query(
+            `CALL novoRegistroInseminacao($1, $2, $3, $4, $5, $6);`,
+            [
+                insData.brincoFemea,
+                insData.geneticaMacho,
+                insData.dataInseminacao,
+                insData.tecnica,
+                insData.resultado,
+                insData.dataVerificacao
+            ]
+        );
+        res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao salvar inseminação." });
+    }
+});
+
+app.delete('/inseminacoes/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rowCount } = await db.query(
+            `UPDATE inseminacao SET insem_statusregistro = false WHERE insem_id = $1 AND insem_statusregistro = true;`,
+            [id]
+        );
+        if (rowCount === 0) {
+            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+        }
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir inseminação." });
+    }
+});
+
+// INSUMOS 
+app.post('/insumos', async (req, res) => {
+    const { nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro } = req.body;
+
+    try {
+        await db.query(
+            `CALL comprarInsumos($1, $2, $3, $4, $5, $6);`,
+            [nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro]
+        );
+
+        res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao registrar compra de insumos." });
+    }
+});
+
+app.delete('/insumos/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { rowCount } = await db.query(
+            `UPDATE insumos SET insu_statusregistro = false WHERE insu_id = $1 AND insu_statusregistro = true;`,
+            [id]
+        );
+
+        if (rowCount === 0) {
+            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+        }
+
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir insumo." });
+    }
+});
+
+app.get('/insumos/historico', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM historicoInsumos();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar histórico de insumos." });
+    }
+});
+
+app.get('/insumos/estoque', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM estoqueInsumos();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar estoque de insumos." });
+    }
+});
+
 
 
 // SERVIDOR

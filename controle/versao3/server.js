@@ -658,6 +658,86 @@ app.get('/insumos/estoque', async (req, res) => {
     }
 });
 
+// LOTES
+app.get('/lotes', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM buscaPaginaLotes($1, $2);`, [null, null]);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar lotes:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar lotes." });
+    }
+});
+
+app.post('/lotes', async (req, res) => {
+    const { lote_id, lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status } = req.body;
+
+    if (!lote_nome || !lote_genetica || lote_quantidade == null || !lote_datacriacao || !lote_status) {
+        return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
+    }
+
+    const statusEnum = ["ativo", "inativo"];
+    if (!statusEnum.includes(lote_status)) {
+        return res.status(400).json({ sucesso: false, erro: "Status inválido." });
+    }
+
+    try {
+        if (lote_id) {
+            const { rowCount } = await db.query(
+                `UPDATE lotes
+                 SET lote_nome=$1, lote_genetica=$2, lote_quantidade=$3, lote_datacriacao=$4, lote_status=$5
+                 WHERE lote_id=$6;`,
+                [lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status, lote_id]
+            );
+            if (rowCount === 0) return res.status(404).json({ sucesso: false, erro: "Lote não encontrado." });
+            return res.json({ sucesso: true, operacao: "editado" });
+        }
+
+        await db.query(
+            `INSERT INTO lotes (lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status, lote_statusregistro)
+             VALUES ($1, $2, $3, $4, $5, true);`,
+            [lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status]
+        );
+        res.json({ sucesso: true, operacao: "criado" });
+    } catch (err) {
+        console.error("Erro ao salvar lote:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao salvar lote." });
+    }
+});
+
+app.delete('/lotes/:id', async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ sucesso: false, erro: "ID obrigatório." });
+
+    try {
+        const result = await db.query(`DELETE FROM lotes WHERE lote_id=$1;`, [id]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ sucesso: false, erro: "Lote não encontrado." });
+        }
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        // Se for violação de chave estrangeira, envia mensagem específica
+        if (err.code === '23503') {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Não é possível excluir este lote pois há registros que o referenciam."
+            });
+        }
+        console.error("Erro ao excluir lote:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir lote." });
+    }
+});
+
+
+app.get('/lotes/nomes-geneticas', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM listaNomesGeneticas();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar nomes de genéticas:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar nomes de genéticas." });
+    }
+});
 
 
 // SERVIDOR

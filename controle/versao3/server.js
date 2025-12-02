@@ -676,6 +676,7 @@ app.delete('/maternidades/:id', async (req, res) => {
 });
 
 // OCORRÊNCIAS
+
 app.get('/ocorrencias', async (req, res) => {
     try {
         const dados = await db.query(
@@ -690,70 +691,52 @@ app.get('/ocorrencias', async (req, res) => {
 });
 
 app.post('/ocorrencias', async (req, res) => {
-    const ocData = req.body;
+    const oc = req.body;
 
     try {
-        const loteNome = ocData.lotenome || ocData.loteNome;
-        const proximasAcoes = ocData.proximasacoes || ocData.proximasAcoes;
-
-        if (ocData.id) {
+        if (oc.id) {
+            // Editar ocorrência
             await db.query(
                 `CALL editarocorrencia($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14);`,
                 [
-                    ocData.id,
-                    loteNome,
-                    ocData.tipo,
-                    ocData.prioridade,
-                    ocData.dia,
-                    ocData.hora,
-                    ocData.titulo,
-                    ocData.descricao,
-                    ocData.quantidadeanimaisafetados || ocData.quantidadeAnimaisAfetados,
-                    ocData.medicamentoaplicado || ocData.medicamentoAplicado,
-                    ocData.dosagem,
-                    ocData.responsavel,
-                    proximasAcoes,
-                    ocData.status
+                    oc.id,
+                    oc.lote,
+                    oc.tipo,
+                    oc.prioridade,
+                    oc.data,
+                    oc.hora,
+                    oc.titulo,
+                    oc.descricao,
+                    oc.quantidadeAnimaisAfetados,
+                    oc.medicamentoAplicado,
+                    oc.dosagem,
+                    oc.responsavel,
+                    oc.proximasAcoes,
+                    oc.status
                 ]
             );
             return res.json({ sucesso: true, operacao: "editado" });
         }
 
+        // Criar nova ocorrência
         await db.query(
-        `CALL novaocorrencia(
-        
-            $1,
-            $2::type_ocorrtipo,
-            $3::type_ocorrprioridade,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            $9,
-            $10,
-            $11,
-            $12,
-            $13,
-            $14::type_ocorrstatus
-            );`,
-        [
-        ocData.loteNome,
-        ocData.tipo,
-        ocData.prioridade,
-        ocData.dia,
-        ocData.hora,
-        ocData.titulo,
-        ocData.descricao,
-        ocData.quantidadeAnimaisAfetados,
-        ocData.medicamentoAplicado,
-        ocData.dosagem,
-        ocData.responsavel,
-        ocData.proximasAcoes,
-        ocData.status
-        ]
-    );
-
+            `CALL novaocorrencia($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13);`,
+            [
+                oc.lote,
+                oc.tipo,
+                oc.prioridade,
+                oc.data,
+                oc.hora,
+                oc.titulo,
+                oc.descricao,
+                oc.quantidadeAnimaisAfetados,
+                oc.medicamentoAplicado,
+                oc.dosagem,
+                oc.responsavel,
+                oc.proximasAcoes,
+                oc.status
+            ]
+        );
         res.json({ sucesso: true, operacao: "criado" });
 
     } catch (err) {
@@ -761,6 +744,7 @@ app.post('/ocorrencias', async (req, res) => {
         res.status(500).json({ sucesso: false, erro: "Erro ao salvar ocorrência." });
     }
 });
+
 
 app.delete('/ocorrencias/:id', async (req, res) => {
     const { id } = req.params;
@@ -813,7 +797,6 @@ app.get('/ocorrencias/qtd-resolvidas-hoje', async (req, res) => {
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências resolvidas hoje." });
     }
 });
-
 
 
 // SERVIDOR 

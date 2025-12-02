@@ -1113,9 +1113,59 @@ app.get('/api/tarefas/me/:usuario', async (req, res) => {
 });
 
 
+// RELATÓRIOS
+
+// --- resumo inicial da página ---
+app.get('/api/relatorios/resumo', async (req, res) => {
+    try {
+        const resultado = {
+            geneticas: (await db.query("SELECT quantidadegeneticasativas() AS v")).rows[0].v,
+            lotesAtivos: (await db.query("SELECT quantidadelotesativos() AS v")).rows[0].v,
+            animaisAtivos: (await db.query("SELECT quantidadeanimaisativos() AS v")).rows[0].v,
+            quarentena: (await db.query("SELECT quantidadelotesquarentenados() AS v")).rows[0].v,
+            bercario: (await db.query("SELECT quantidadeleitoesbercario() AS v")).rows[0].v,
+            gestantes: (await db.query("SELECT quantidadeporcasgestantes() AS v")).rows[0].v,
+            lactantes: (await db.query("SELECT quantidadeporcaslactantes() AS v")).rows[0].v,
+            inseminacoesPendentes: (await db.query("SELECT quantidadeinseminacoespendentes() AS v")).rows[0].v
+        };
+
+        res.json({ ok: true, resultado });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao buscar resumo" });
+    }
+});
 
 
+// --- busca de relatórios (partos/desmames) ---
+app.get('/api/relatorios', async (req, res) => {
+    try {
+        const { tipo, dataIni, dataFim } = req.query;
 
+        if (!tipo || (tipo !== "partos" && tipo !== "desmames")) {
+            return res.status(400).json({ ok: false, erro: "Tipo inválido. Use: partos | desmames" });
+        }
+
+        const query = `
+            SELECT * FROM buscarelatorios($1, $2, $3)
+        `;
+
+        const params = [
+            tipo,
+            dataIni || null,
+            dataFim || null
+        ];
+
+        const resultado = await db.query(query, params);
+
+        res.json({ ok: true, resultado: resultado.rows });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ ok: false, erro: "Erro ao buscar relatório" });
+    }
+});
 
 
 

@@ -798,6 +798,72 @@ app.get('/ocorrencias/qtd-resolvidas-hoje', async (req, res) => {
     }
 });
 
+//USUÁRIOS
+
+app.get('/usuarios', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM buscausuarios();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao listar usuários:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar usuários." });
+    }
+});
+
+
+app.post('/usuarios', async (req, res) => {
+    const u = req.body;
+
+    try {
+        // EDITAR USUÁRIO
+        if (u.old_nickname) {
+            await db.query(
+                `CALL editarregistrousuario($1,$2,$3,$4,$5);`,
+                [
+                    u.old_nickname,
+                    u.new_nickname,
+                    u.new_nome,
+                    u.new_tipo,
+                    u.new_senha
+                ]
+            );
+            return res.json({ sucesso: true, operacao: "editado" });
+        }
+
+        // CRIAR USUÁRIO
+        await db.query(
+            `CALL novoregistrousuario($1,$2,$3,$4);`,
+            [
+                u.nickname,
+                u.nome,
+                u.tipo,
+                u.senha
+            ]
+        );
+
+        res.json({ sucesso: true, operacao: "criado" });
+
+    } catch (err) {
+        console.error("Erro ao salvar usuário:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao salvar usuário." });
+    }
+});
+
+app.delete('/usuarios/:nickname', async (req, res) => {
+    const { nickname } = req.params;
+
+    try {
+        await db.query(`CALL excluirregistrousuario($1);`, [nickname]);
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error("Erro ao excluir usuário:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir usuário." });
+    }
+});
+
+
+
+
 
 // SERVIDOR 
 app.listen(3000, () => console.log("Backend rodando na porta 3000"));

@@ -71,7 +71,6 @@ app.get('/bercario', async (req, res) => {
 
 app.post('/bercario', async (req, res) => {
     const dados = req.body;
-    console.log("📩 Dados recebidos no POST /bercario:", dados);
 
     try {
         if (dados.id) {
@@ -79,7 +78,7 @@ app.post('/bercario', async (req, res) => {
             await db.query(
                 `CALL editarRegistroBercario($1, $2, $3, $4, $5, $6, $7);`,
                 [
-                    dados.id,               // ⚠️ id primeiro
+                    dados.id,               
                     dados.loteNome,
                     dados.quantidadeLeitoes,
                     dados.dataNascimento,
@@ -144,13 +143,14 @@ app.delete('/bercario/:id', async (req, res) => {
 
 app.get('/contratos', async (req, res) => {
     try {
-        const { rows } = await db.query(`SELECT * FROM contratos ORDER BY cont_id;`);
+        const { rows } = await db.query(`SELECT * FROM buscaContratos();`);
         return res.status(200).json({ sucesso: true, dados: rows });
     } catch (err) {
         console.error("Erro ao buscar contratos:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao buscar contratos." });
     }
 });
+
 
 app.post('/contratos', async (req, res) => {
     try {
@@ -159,25 +159,22 @@ app.post('/contratos', async (req, res) => {
         if (!fornecedor || !objeto || !dataInicio || !dataVencimento) {
             return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
         }
-
         if (new Date(dataInicio) > new Date(dataVencimento)) {
             return res.status(400).json({ sucesso: false, erro: "Data de início não pode ser maior que a data de vencimento." });
         }
 
         const { rows } = await db.query(
-            `INSERT INTO contratos
-                (cont_fornecedor, cont_objeto, cont_dataInicio, cont_dataVencimento, cont_status, cont_statusregistro)
-             VALUES ($1, $2, $3, $4, 'futuro', true)
-             RETURNING cont_id;`,
+            `CALL novoRegistroContrato($1, $2, $3, $4);`,
             [fornecedor, objeto, dataInicio, dataVencimento]
         );
 
-        return res.status(201).json({ sucesso: true, operacao: "criado", cont_id: rows[0].cont_id });
+        return res.status(201).json({ sucesso: true, operacao: "criado" });
     } catch (err) {
         console.error("Erro ao criar contrato:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar contrato." });
     }
 });
+
 
 app.put('/contratos/:id', async (req, res) => {
     try {
@@ -192,16 +189,10 @@ app.put('/contratos/:id', async (req, res) => {
             return res.status(400).json({ sucesso: false, erro: "Data de início não pode ser maior que a data de vencimento." });
         }
 
-        const { rowCount } = await db.query(
-            `UPDATE contratos
-             SET cont_fornecedor = $1, cont_objeto = $2, cont_dataInicio = $3, cont_dataVencimento = $4
-             WHERE cont_id = $5;`,
-            [fornecedor, objeto, dataInicio, dataVencimento, id]
+        await db.query(
+            `CALL editarRegistroContrato($1, $2, $3, $4, $5);`,
+            [id, fornecedor, objeto, dataInicio, dataVencimento]
         );
-
-        if (rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Contrato não encontrado." });
-        }
 
         return res.status(200).json({ sucesso: true, operacao: "editado" });
     } catch (err) {
@@ -209,20 +200,15 @@ app.put('/contratos/:id', async (req, res) => {
         return res.status(500).json({ sucesso: false, erro: "Erro ao editar contrato." });
     }
 });
-
 app.delete('/contratos/:id', async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) return res.status(400).json({ sucesso: false, erro: "ID é obrigatório." });
 
-        const { rowCount } = await db.query(
-            `DELETE FROM contratos WHERE cont_id = $1;`,
+        await db.query(
+            `CALL excluirRegistroContrato($1);`,
             [id]
         );
-
-        if (rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Contrato não encontrado." });
-        }
 
         return res.status(200).json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
@@ -230,21 +216,14 @@ app.delete('/contratos/:id', async (req, res) => {
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir contrato." });
     }
 });
-// EVENTOS
 
+// EVENTOS
 app.post('/eventos/inseminacao', async (req, res) => {
     const { dataCobertura, matrizId, tipo, observacoes } = req.body;
     try {
-        await db.query(
-            `INSERT INTO eventocoberturainseminacao
-                (cobert_datacobertura, cobert_matrizid, cobert_tipo, cobert_observacoes, cobert_statusregistro)
-             VALUES ($1, $2, $3, $4, true)
-             RETURNING cobert_id;`,
-            [dataCobertura, matrizId, tipo, observacoes]
-        );
+        await db.query(`CALL novoEventoCoberturaInseminacao($1, $2, $3, $4);`, [dataCobertura, matrizId, tipo, observacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de inseminação." });
     }
 });
@@ -252,16 +231,9 @@ app.post('/eventos/inseminacao', async (req, res) => {
 app.post('/eventos/parto', async (req, res) => {
     const { data, matrizId, quantidadeNascidos, observacoes } = req.body;
     try {
-        await db.query(
-            `INSERT INTO eventoparto
-                (parto_data, parto_matrizid, parto_quantidadenascidos, parto_observacoes, parto_statusregistro)
-             VALUES ($1, $2, $3, $4, true)
-             RETURNING parto_id;`,
-            [data, matrizId, quantidadeNascidos, observacoes]
-        );
+        await db.query(`CALL novoEventoParto($1, $2, $3, $4);`, [data, matrizId, quantidadeNascidos, observacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de parto." });
     }
 });
@@ -269,16 +241,9 @@ app.post('/eventos/parto', async (req, res) => {
 app.post('/eventos/desmame', async (req, res) => {
     const { data, loteId, quantidadeDesmamados, observacoes } = req.body;
     try {
-        await db.query(
-            `INSERT INTO eventodesmame
-                (desm_data, desm_loteid, desm_quantidadedesmamados, desm_observacoes, desm_statusregistro)
-             VALUES ($1, $2, $3, $4, true)
-             RETURNING desm_id;`,
-            [data, loteId, quantidadeDesmamados, observacoes]
-        );
+        await db.query(`CALL novoEventoDesmame($1, $2, $3, $4);`, [data, loteId, quantidadeDesmamados, observacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de desmame." });
     }
 });
@@ -286,16 +251,9 @@ app.post('/eventos/desmame', async (req, res) => {
 app.post('/eventos/morte-femea', async (req, res) => {
     const { femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes } = req.body;
     try {
-        await db.query(
-            `INSERT INTO eventomortalidadefemea
-                (mort_femeadata, mort_femeaidmatriz, mort_femeacausamorte, mort_femeaobservacoes, mort_femeastatusregistro)
-             VALUES ($1, $2, $3, $4, true)
-             RETURNING mort_femeaid;`,
-            [femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes]
-        );
+        await db.query(`CALL novoEventoMorteFemea($1, $2, $3, $4);`, [femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de morte de fêmea." });
     }
 });
@@ -303,16 +261,9 @@ app.post('/eventos/morte-femea', async (req, res) => {
 app.post('/eventos/morte-lote', async (req, res) => {
     const { loteData, loteIdLote, loteCausaMorte, loteObservacoes } = req.body;
     try {
-        await db.query(
-            `INSERT INTO eventomortalidadelote
-                (mort_lotedata, mort_loteidlote, mort_lotecausamorte, mort_loteobservacoes, mort_lotestatusregistro)
-             VALUES ($1, $2, $3, $4, true)
-             RETURNING mort_loteid;`,
-            [loteData, loteIdLote, loteCausaMorte, loteObservacoes]
-        );
+        await db.query(`CALL novoEventoMorteLote($1, $2, $3, $4);`, [loteData, loteIdLote, loteCausaMorte, loteObservacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de morte de lote." });
     }
 });
@@ -320,16 +271,9 @@ app.post('/eventos/morte-lote', async (req, res) => {
 app.delete('/eventos/inseminacao/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const { rows } = await db.query(
-            `SELECT cobert_id FROM eventocoberturainseminacao WHERE cobert_id = $1;`,
-            [id]
-        );
-        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
-
         await db.query(`CALL excluirEventoCoberturaInseminacao($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de inseminação." });
     }
 });
@@ -337,16 +281,9 @@ app.delete('/eventos/inseminacao/:id', async (req, res) => {
 app.delete('/eventos/parto/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const { rows } = await db.query(
-            `SELECT parto_id FROM eventoparto WHERE parto_id = $1;`,
-            [id]
-        );
-        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
-
         await db.query(`CALL excluirEventoParto($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de parto." });
     }
 });
@@ -354,16 +291,9 @@ app.delete('/eventos/parto/:id', async (req, res) => {
 app.delete('/eventos/desmame/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const { rows } = await db.query(
-            `SELECT desm_id FROM eventodesmame WHERE desm_id = $1;`,
-            [id]
-        );
-        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
-
         await db.query(`CALL excluirEventoDesmame($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de desmame." });
     }
 });
@@ -371,16 +301,9 @@ app.delete('/eventos/desmame/:id', async (req, res) => {
 app.delete('/eventos/morte-femea/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const { rows } = await db.query(
-            `SELECT mort_femeaid FROM eventomortalidadefemea WHERE mort_femeaid = $1;`,
-            [id]
-        );
-        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
-
         await db.query(`CALL excluirEventoMorteFemea($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de morte de fêmea." });
     }
 });
@@ -388,38 +311,23 @@ app.delete('/eventos/morte-femea/:id', async (req, res) => {
 app.delete('/eventos/morte-lote/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const { rows } = await db.query(
-            `SELECT mort_loteid FROM eventomortalidadelote WHERE mort_loteid = $1;`,
-            [id]
-        );
-        if (rows.length === 0) return res.status(404).json({ sucesso: false, erro: "Evento não encontrado." });
-
         await db.query(`CALL excluirEventoMorteLote($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error(err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de morte de lote." });
     }
 });
 
 //FINANCEIRO
-
 app.post('/financeiro', async (req, res) => {
     const { data, descricao, valor, tipo, categoria } = req.body;
-
     if (!data || !descricao || !valor || !tipo || !categoria) {
         return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
     }
-
     try {
-        await db.query(
-            `CALL novoRegistroFinanceiro($1, $2, $3, $4, $5);`,
-            [data, descricao, valor, tipo, categoria]
-        );
-
+        await db.query(`CALL novoRegistroFinanceiro($1, $2, $3, $4, $5);`, [data, descricao, valor, tipo, categoria]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("Erro ao criar registro financeiro:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar registro financeiro." });
     }
 });
@@ -427,71 +335,42 @@ app.post('/financeiro', async (req, res) => {
 app.put('/financeiro/:id', async (req, res) => {
     const { id } = req.params;
     const { data, descricao, valor, tipo, categoria } = req.body;
-
     if (!id) return res.status(400).json({ sucesso: false, erro: "ID é obrigatório." });
     if (!data || !descricao || !valor || !tipo || !categoria) {
         return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
     }
-
     try {
-        const { rowCount } = await db.query(
-            `CALL editarRegistroFinanceiro($1, $2, $3, $4, $5, $6);`,
-            [id, data, descricao, valor, tipo, categoria]
-        );
-
-        if (rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
-        }
-
+        await db.query(`CALL editarRegistroFinanceiro($1, $2, $3, $4, $5, $6);`, [id, data, descricao, valor, tipo, categoria]);
         return res.json({ sucesso: true, operacao: "editado" });
     } catch (err) {
-        console.error("Erro ao editar registro financeiro:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao editar registro financeiro." });
     }
 });
 
 app.delete('/financeiro/:id', async (req, res) => {
     const { id } = req.params;
-
     try {
-        const { rowCount } = await db.query(
-            `SELECT 1 FROM financeiro WHERE finan_id = $1;`,
-            [id]
-        );
-
-        if (rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
-        }
-
-        await db.query(
-            `CALL excluirRegistroFinanceiro($1);`,
-            [id]
-        );
-
-        res.json({ sucesso: true, operacao: "excluido" });
-
+        await db.query(`CALL excluirRegistroFinanceiro($1);`, [id]);
+        return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        res.status(500).json({ sucesso: false, erro: "Erro ao excluir registro financeiro." });
+        return res.status(500).json({ sucesso: false, erro: "Erro ao excluir registro financeiro." });
     }
 });
 
-
 app.get('/financeiro', async (req, res) => {
     try {
-        const { rows } = await db.query(`SELECT * FROM financeiro ORDER BY finan_id;`);
+        const { rows } = await db.query(`SELECT * FROM buscaFinanceiro();`);
         return res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("Erro ao buscar registros financeiros:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao buscar registros financeiros." });
     }
 });
 
 // GENÉTICAS
-
 app.get('/geneticas', async (req, res) => {
     try {
-        const dados = await db.query(`SELECT * FROM geneticas WHERE gen_statusregistro = true;`);
-        res.json({ sucesso: true, dados: dados.rows });
+        const { rows } = await db.query(`SELECT * FROM listagemFinalPaginaGeneticas();`);
+        res.json({ sucesso: true, dados: rows });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar genéticas." });
     }
@@ -501,22 +380,10 @@ app.post('/geneticas', async (req, res) => {
     const g = req.body;
     try {
         if (g.id) {
-            const { rowCount } = await db.query(
-                `UPDATE geneticas
-                 SET gen_nome=$1, gen_descricao=$2, gen_caracteristicas=$3, gen_status=$4
-                 WHERE gen_id=$5 AND gen_statusregistro = true;`,
-                [g.nome, g.descricao, g.caracteristicas, g.status, g.id]
-            );
-            if (rowCount === 0) return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+            await db.query(`CALL editaRegistroGenetica($1, $2, $3, $4, $5);`, [g.id, g.nome, g.descricao, g.caracteristicas, g.status]);
             return res.json({ sucesso: true, operacao: "editado" });
         }
-
-        await db.query(
-            `INSERT INTO geneticas (gen_nome, gen_descricao, gen_caracteristicas, gen_status, gen_statusregistro)
-             VALUES ($1, $2, $3, $4, true);`,
-            [g.nome, g.descricao, g.caracteristicas, g.status]
-        );
-
+        await db.query(`CALL novoRegistroGenetica($1, $2, $3);`, [g.nome, g.descricao, g.caracteristicas]);
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao salvar genética." });
@@ -524,13 +391,9 @@ app.post('/geneticas', async (req, res) => {
 });
 
 app.delete('/geneticas/:id', async (req, res) => {
-    const id = req.params.id;
+    const { id } = req.params;
     try {
-        const { rowCount } = await db.query(
-            `UPDATE geneticas SET gen_statusregistro=false WHERE gen_id=$1 AND gen_statusregistro = true;`,
-            [id]
-        );
-        if (rowCount === 0) return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
+        await db.query(`CALL excluirRegistroGenetica($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao excluir genética." });
@@ -538,16 +401,10 @@ app.delete('/geneticas/:id', async (req, res) => {
 });
 
 // INSEMINAÇÃO
-
 app.get('/inseminacoes', async (req, res) => {
     try {
-        const dados = await db.query(
-            `SELECT insem_id, insem_brincofemea, insem_geneticamacho, insem_datainseminacao, insem_tecnica, insem_resultado, insem_dataverificacao 
-             FROM inseminacao 
-             WHERE insem_statusregistro = true 
-             ORDER BY insem_datainseminacao DESC;`
-        );
-        res.json({ sucesso: true, dados: dados.rows });
+        const { rows } = await db.query(`SELECT * FROM buscaInseminacao(NULL, NULL);`);
+        res.json({ sucesso: true, dados: rows });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar inseminações." });
     }
@@ -592,29 +449,23 @@ app.post('/inseminacoes', async (req, res) => {
 app.delete('/inseminacoes/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const { rowCount } = await db.query(
-            `UPDATE inseminacao SET insem_statusregistro = false WHERE insem_id = $1 AND insem_statusregistro = true;`,
-            [id]
-        );
-        if (rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
-        }
+        await db.query(`CALL excluirRegistroInseminacao($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao excluir inseminação." });
     }
 });
 
-// INSUMOS 
+
+// INSUMOS
+
 app.post('/insumos', async (req, res) => {
     const { nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro } = req.body;
-
     try {
         await db.query(
             `CALL comprarInsumos($1, $2, $3, $4, $5, $6);`,
             [nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro]
         );
-
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao registrar compra de insumos." });
@@ -623,17 +474,8 @@ app.post('/insumos', async (req, res) => {
 
 app.delete('/insumos/:id', async (req, res) => {
     const { id } = req.params;
-
     try {
-        const { rowCount } = await db.query(
-            `UPDATE insumos SET insu_statusregistro = false WHERE insu_id = $1 AND insu_statusregistro = true;`,
-            [id]
-        );
-
-        if (rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Registro não encontrado." });
-        }
-
+        await db.query(`CALL excluirInsumos($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao excluir insumo." });
@@ -642,8 +484,8 @@ app.delete('/insumos/:id', async (req, res) => {
 
 app.get('/insumos/historico', async (req, res) => {
     try {
-        const dados = await db.query(`SELECT * FROM historicoInsumos();`);
-        res.json({ sucesso: true, dados: dados.rows });
+        const { rows } = await db.query(`SELECT * FROM historicoInsumos();`);
+        res.json({ sucesso: true, dados: rows });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar histórico de insumos." });
     }
@@ -651,96 +493,62 @@ app.get('/insumos/historico', async (req, res) => {
 
 app.get('/insumos/estoque', async (req, res) => {
     try {
-        const dados = await db.query(`SELECT * FROM estoqueInsumos();`);
-        res.json({ sucesso: true, dados: dados.rows });
+        const { rows } = await db.query(`SELECT * FROM estoqueInsumos();`);
+        res.json({ sucesso: true, dados: rows });
     } catch (err) {
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar estoque de insumos." });
     }
 });
 
 // LOTES
+
 app.get('/lotes', async (req, res) => {
     try {
-        const dados = await db.query(`SELECT * FROM buscaPaginaLotes($1, $2);`, [null, null]);
-        res.json({ sucesso: true, dados: dados.rows });
+        const { rows } = await db.query(`SELECT * FROM buscaPaginaLotes($1, $2);`, [null, null]);
+        res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("Erro ao buscar lotes:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar lotes." });
     }
 });
 
 app.post('/lotes', async (req, res) => {
     const { lote_id, lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status } = req.body;
-
-    if (!lote_nome || !lote_genetica || lote_quantidade == null || !lote_datacriacao || !lote_status) {
-        return res.status(400).json({ sucesso: false, erro: "Campos obrigatórios faltando." });
-    }
-
-    const statusEnum = ["ativo", "inativo"];
-    if (!statusEnum.includes(lote_status)) {
-        return res.status(400).json({ sucesso: false, erro: "Status inválido." });
-    }
-
     try {
         if (lote_id) {
-            const { rowCount } = await db.query(
-                `UPDATE lotes
-                 SET lote_nome=$1, lote_genetica=$2, lote_quantidade=$3, lote_datacriacao=$4, lote_status=$5
-                 WHERE lote_id=$6;`,
-                [lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status, lote_id]
+            await db.query(
+                `CALL editaLote($1, $2, $3, $4, $5, $6);`,
+                [lote_id, lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status]
             );
-            if (rowCount === 0) return res.status(404).json({ sucesso: false, erro: "Lote não encontrado." });
             return res.json({ sucesso: true, operacao: "editado" });
         }
-
         await db.query(
-            `INSERT INTO lotes (lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status, lote_statusregistro)
-             VALUES ($1, $2, $3, $4, $5, true);`,
+            `CALL novoLote($1, $2, $3, $4, $5);`,
             [lote_nome, lote_genetica, lote_quantidade, lote_datacriacao, lote_status]
         );
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("Erro ao salvar lote:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao salvar lote." });
     }
 });
 
 app.delete('/lotes/:id', async (req, res) => {
     const { id } = req.params;
-    if (!id) return res.status(400).json({ sucesso: false, erro: "ID obrigatório." });
-
     try {
-        const result = await db.query(`DELETE FROM lotes WHERE lote_id=$1;`, [id]);
-        if (result.rowCount === 0) {
-            return res.status(404).json({ sucesso: false, erro: "Lote não encontrado." });
-        }
+        await db.query(`CALL excluirLote($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        // Se for violação de chave estrangeira, envia mensagem específica
-        if (err.code === '23503') {
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Não é possível excluir este lote pois há registros que o referenciam."
-            });
-        }
-        console.error("Erro ao excluir lote:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao excluir lote." });
     }
 });
 
-
 app.get('/lotes/nomes-geneticas', async (req, res) => {
     try {
-        const dados = await db.query(`SELECT * FROM listaNomesGeneticas();`);
-        res.json({ sucesso: true, dados: dados.rows });
+        const { rows } = await db.query(`SELECT * FROM listaNomesGeneticas();`);
+        res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("Erro ao buscar nomes de genéticas:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar nomes de genéticas." });
     }
 });
 
-
-// SERVIDOR
-
+// SERVIDOR 
 app.listen(3000, () => console.log("Backend rodando na porta 3000"));
-

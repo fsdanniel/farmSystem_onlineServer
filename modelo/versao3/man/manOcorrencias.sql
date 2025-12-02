@@ -1,4 +1,4 @@
-
+//Tem erro. É tudo minusculo.
 CALL novaOcorrencia(
 	loteNome VARCHAR(30),
 	tipo TYPE_OCORRTIPO,

@@ -675,6 +675,146 @@ app.delete('/maternidades/:id', async (req, res) => {
   }
 });
 
+// OCORRÊNCIAS
+app.get('/ocorrencias', async (req, res) => {
+    try {
+        const dados = await db.query(
+            `SELECT * FROM buscaocorrencias($1, $2, $3);`,
+            [null, null, null]
+        );
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar ocorrências:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências." });
+    }
+});
+
+app.post('/ocorrencias', async (req, res) => {
+    const ocData = req.body;
+
+    try {
+        const loteNome = ocData.lotenome || ocData.loteNome;
+        const proximasAcoes = ocData.proximasacoes || ocData.proximasAcoes;
+
+        if (ocData.id) {
+            await db.query(
+                `CALL editarocorrencia($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14);`,
+                [
+                    ocData.id,
+                    loteNome,
+                    ocData.tipo,
+                    ocData.prioridade,
+                    ocData.dia,
+                    ocData.hora,
+                    ocData.titulo,
+                    ocData.descricao,
+                    ocData.quantidadeanimaisafetados || ocData.quantidadeAnimaisAfetados,
+                    ocData.medicamentoaplicado || ocData.medicamentoAplicado,
+                    ocData.dosagem,
+                    ocData.responsavel,
+                    proximasAcoes,
+                    ocData.status
+                ]
+            );
+            return res.json({ sucesso: true, operacao: "editado" });
+        }
+
+        await db.query(
+        `CALL novaocorrencia(
+        
+            $1,
+            $2::type_ocorrtipo,
+            $3::type_ocorrprioridade,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            $11,
+            $12,
+            $13,
+            $14::type_ocorrstatus
+            );`,
+        [
+        ocData.loteNome,
+        ocData.tipo,
+        ocData.prioridade,
+        ocData.dia,
+        ocData.hora,
+        ocData.titulo,
+        ocData.descricao,
+        ocData.quantidadeAnimaisAfetados,
+        ocData.medicamentoAplicado,
+        ocData.dosagem,
+        ocData.responsavel,
+        ocData.proximasAcoes,
+        ocData.status
+        ]
+    );
+
+        res.json({ sucesso: true, operacao: "criado" });
+
+    } catch (err) {
+        console.error("Erro ao salvar ocorrência:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao salvar ocorrência." });
+    }
+});
+
+app.delete('/ocorrencias/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await db.query(`CALL excluirocorrencia($1);`, [id]);
+        res.json({ sucesso: true, operacao: "excluido" });
+    } catch (err) {
+        console.error("Erro ao excluir ocorrência:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao excluir ocorrência." });
+    }
+});
+
+app.get('/ocorrencias/lotes', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM listagemlotes();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar lotes:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar lotes." });
+    }
+});
+
+app.get('/ocorrencias/qtd-criticas', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM quantidadeocorrenciascriticas();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar ocorrências críticas:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências críticas." });
+    }
+});
+
+app.get('/ocorrencias/qtd-pendentes', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM quantidadeocorrenciaspendentes();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar ocorrências pendentes:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências pendentes." });
+    }
+});
+
+app.get('/ocorrencias/qtd-resolvidas-hoje', async (req, res) => {
+    try {
+        const dados = await db.query(`SELECT * FROM quantidadeocorrenciasresolvidashoje();`);
+        res.json({ sucesso: true, dados: dados.rows });
+    } catch (err) {
+        console.error("Erro ao buscar ocorrências resolvidas hoje:", err);
+        res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências resolvidas hoje." });
+    }
+});
+
+
 
 // SERVIDOR 
 app.listen(3000, () => console.log("Backend rodando na porta 3000"));

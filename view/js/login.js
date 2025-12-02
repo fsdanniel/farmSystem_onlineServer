@@ -1,45 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // DADOS MOCADOS DOS USUÁRIOS
-    // (Simula nosso banco de dados de usuários com 3 perfis)
-    const mockUsuarios = [
-        { 
-            id: 'admin', 
-            senha: '123', 
-            nome: 'Administrador', 
-            perfil: 'admin' // Perfil de Administrador
-        },
-        { 
-            id: 'vet', 
-            senha: '123', 
-            nome: 'Dr. João', 
-            perfil: 'veterinario' // Perfil de Veterinário
-        },
-        { 
-            id: 'func', 
-            senha: '123', 
-            nome: 'Carlos (Funcionário)', 
-            perfil: 'funcionario' // Perfil de Funcionário
-        }
-    ];
-
     // SELETORES DO DOM
     const form = document.getElementById('formulario-login');
     const idGranjaInput = document.getElementById('id-granja');
     const senhaInput = document.getElementById('senha');
     const botaoLogin = document.getElementById('botao-login');
-    
-    // Novo seletor para o componente de erro (substitui o alert)
     const mensagemErro = document.getElementById('mensagem-erro');
+
+    // CONFIGURAÇÃO DA API
+    // Se o seu backend estiver em outra URL ou porta, altere aqui.
+    const API_URL = 'http://localhost:3000'; 
 
     // FUNÇÃO AUXILIAR PARA MOSTRAR ERROS 
     function mostrarErro(mensagem) {
-        // (Esta função espera que exista um <p id="mensagem-erro"> no HTML)
         if (mensagemErro) {
             mensagemErro.textContent = mensagem;
             mensagemErro.classList.add('visivel');
         } else {
-            // Fallback caso o HTML esteja errado
             console.error("Elemento #mensagem-erro não encontrado. Fallback para alert.");
             alert(mensagem);
         }
@@ -53,58 +30,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // LISTENER DE SUBMIT DO FORMULÁRIO (Lógica Principal)
-    form.addEventListener('submit', (event) => {
-        event.preventDefault(); // Impede o recarregamento da página
+    // LISTENER DE SUBMIT DO FORMULÁRIO (Integração Real)
+    // Note o uso de 'async' para podermos esperar a resposta do servidor
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault(); 
         
-        // Esconde erros antigos
         esconderErro();
 
-        // Pega os valores dos inputs
         const usuarioId = idGranjaInput.value.trim();
         const senha = senhaInput.value.trim();
 
-        // Validação 1: Campos vazios
+        // Validação 1: Campos vazios (Front-end validation)
         if (!usuarioId || !senha) {
             mostrarErro('Por favor, preencha todos os campos.');
             return;
         }
 
-        // Desabilita o botão para feedback
+        // Estado de "Carregando"
         botaoLogin.disabled = true;
         botaoLogin.textContent = 'Entrando...';
 
-        // Simula uma pequena demora (como se fosse uma chamada de API)
-        setTimeout(() => {
-            // Validação 2: Encontra o usuário no mock
-            // (Compara com 'id', não 'idGranja')
-            const usuarioEncontrado = mockUsuarios.find(u => u.id === usuarioId);
+        try {
+            // CHAMADA REAL AO CONTROLE (Back-end)
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // O servidor espera: { usuario, senha }
+                body: JSON.stringify({
+                    usuario: usuarioId, // Mapeando o input do HTML para a chave da API
+                    senha: senha
+                })
+            });
 
-            // Validação 3: Verifica o usuário e a senha
-            if (usuarioEncontrado && usuarioEncontrado.senha === senha) {
+            // Converte a resposta do servidor para JSON
+            const dados = await response.json();
+
+            // Verifica a resposta do servidor
+            if (dados.sucesso) {
                 // SUCESSO!
                 
-                // Salva as informações do usuário no localStorage
-                // Isso é o que o app.html vai usar para saber quem está logado
-                localStorage.setItem('perfilUsuario', usuarioEncontrado.perfil);
-                localStorage.setItem('nomeUsuario', usuarioEncontrado.nome);
+                // O servidor retorna { sucesso: true, usuario: "...", tipo: "..." }
+                // Vamos salvar conforme a lógica da sua View esperava:
+                localStorage.setItem('perfilUsuario', dados.tipo); 
+                localStorage.setItem('nomeUsuario', dados.usuario);
 
-                // Redireciona para o dashboard principal
+                // Redireciona
                 window.location.href = 'app.html';
-
             } else {
-                // FALHA!
-                mostrarErro('Usuário ou Senha incorretos. Tente novamente.');
+                // FALHA (Credenciais inválidas ou erro de negócio)
+                // O servidor retorna "motivo" quando falha
+                let mensagem = 'Usuário ou Senha incorretos.';
                 
-                // Reabilita o botão
+                // Traduzindo mensagens técnicas do backend para o usuário, se necessário
+                if (dados.motivo === 'usuario_ou_senha_faltando') mensagem = 'Dados incompletos.';
+                
+                mostrarErro(mensagem);
+            }
+
+        } catch (error) {
+            // ERRO DE CONEXÃO (Servidor desligado, internet caiu, etc)
+            console.error('Erro na requisição:', error);
+            mostrarErro('Erro ao conectar com o servidor. Verifique se o sistema está online.');
+        } finally {
+            // Sempre executa isso no final, dando erro ou sucesso (se não redirecionar antes)
+            // Reabilita o botão caso o login falhe
+            if (!window.location.href.includes('app.html')) {
                 botaoLogin.disabled = false;
                 botaoLogin.textContent = 'Entrar';
             }
-        }, 1000); // Atraso de 1 segundo
+        }
     });
 
-    // MELHORIA DE UX: Esconde o erro quando o usuário voltar a digitar
+    // UX: Limpa erro ao digitar
     idGranjaInput.addEventListener('input', esconderErro);
     senhaInput.addEventListener('input', esconderErro);
 });
-

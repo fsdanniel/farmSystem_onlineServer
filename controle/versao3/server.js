@@ -111,6 +111,32 @@ app.post('/bercario', async (req, res) => {
     }
 });
 
+app.put('/bercario/:loteNome', async (req, res) => {
+    const loteNome = req.params.loteNome;
+    const dados = req.body;
+
+    try {
+        await db.query(
+            `CALL editarRegistroBercario($1, $2, $3, $4, $5, $6, $7);`,
+            [
+                loteNome,               
+                dados.qtdeLeitoes,
+                dados.dataNascimento,
+                dados.pesoMedio,
+                dados.dataDesmame,
+                dados.status,
+                true                   
+            ]
+        );
+
+        return res.json({ sucesso: true, operacao: "editado" });
+    } catch (err) {
+        console.error("ERRO SQL:", err);
+        return res.status(500).json({ erro: "Erro ao editar berçário" });
+    }
+});
+
+
 
 app.delete('/bercario/:id', async (req, res) => {
     const id = req.params.id;

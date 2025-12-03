@@ -4,7 +4,8 @@
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL = 'http://localhost:3000';
+// Ajustado para uso relativo (mesmo domínio do servidor web)
+const API_URL = '';
 
 // --- API REAL (Integração com Back-end) ---
 
@@ -25,7 +26,9 @@ async function fetchLancamentos() {
         }
     } catch (error) {
         console.error("Erro de conexão:", error);
-        mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        }
         return [];
     }
 }
@@ -110,7 +113,11 @@ async function inicializarModuloFinanceiro() {
 
         // Validação
         if (!dados.data || !dados.descricao || !dados.tipo || isNaN(dados.valor) || dados.valor <= 0) {
-             mostrarNotificacao('Erro', 'Por favor, preencha todos os campos corretamente.');
+             if (typeof mostrarNotificacao === 'function') {
+                 mostrarNotificacao('Erro', 'Por favor, preencha todos os campos corretamente.');
+             } else {
+                 alert('Por favor, preencha todos os campos corretamente.');
+             }
              return;
         }
 
@@ -125,9 +132,16 @@ async function inicializarModuloFinanceiro() {
             // Restaura a data de hoje após o reset
             document.getElementById('lancamento-data').value = new Date().toISOString().split('T')[0];
             
-            mostrarNotificacao('Sucesso!', `Lançamento de ${formatarMoeda(dados.valor)} salvo.`);
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Sucesso!', `Lançamento de ${formatarMoeda(dados.valor)} salvo.`);
+            }
         } catch (error) {
-            mostrarNotificacao('Erro ao Salvar', error.message);
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Erro ao Salvar', error.message);
+            } else {
+                console.error(error);
+                alert('Erro ao salvar: ' + error.message);
+            }
         } finally {
             btnSalvarNovoLancamento.disabled = false;
             btnSalvarNovoLancamento.textContent = 'Salvar Lançamento';
@@ -161,11 +175,13 @@ async function carregarLancamentos() {
     
     // Ordena por data, mais recentes primeiro
     // Adaptação para garantir que ordena independente se vier data ISO ou timestamp
-    lancamentos.sort((a, b) => {
-        const dataA = new Date(a.data);
-        const dataB = new Date(b.data);
-        return dataB - dataA;
-    });
+    if (lancamentos && lancamentos.length > 0) {
+        lancamentos.sort((a, b) => {
+            const dataA = new Date(a.data);
+            const dataB = new Date(b.data);
+            return dataB - dataA;
+        });
+    }
 
     tabelaBody.innerHTML = ''; // Limpa o "Carregando"
     
@@ -222,9 +238,15 @@ async function handleExcluirLancamento(id) {
         try {
             await deleteLancamento(id);
             await carregarLancamentos(); // Recarrega a tabela
-            mostrarNotificacao('Sucesso!', 'Lançamento excluído com sucesso.');
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Sucesso!', 'Lançamento excluído com sucesso.');
+            }
         } catch (error) {
-            mostrarNotificacao('Erro ao Excluir', error.message);
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Erro ao Excluir', error.message);
+            } else {
+                alert(error.message);
+            }
         }
     };
 

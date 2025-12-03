@@ -5,7 +5,8 @@
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL_RELATORIOS = 'http://localhost:3000';
+// Ajustado para uso relativo (mesmo domínio do servidor web)
+const API_URL_RELATORIOS = '';
 
 /**
  * Inicializa a lógica do Gerador de Relatórios (botão Filtrar).
@@ -22,7 +23,11 @@ function inicializarModuloRelatorios() {
         const tipo = document.getElementById("tipoRelatorio").value;
         
         if (!tipo) {
-            mostrarNotificacao('Atenção!', 'Selecione o tipo de relatório.');
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Atenção!', 'Selecione o tipo de relatório.');
+            } else {
+                alert('Selecione o tipo de relatório.');
+            }
             return;
         }
 
@@ -38,12 +43,12 @@ function inicializarModuloRelatorios() {
                 const json = await response.json();
                 
                 if (json.sucesso && json.dados) {
-                    // Filtra apenas registros relevantes (com leitões nascidos ou gestantes)
-                    // e mapeia para o formato da tabela de relatório
+                    // Mapeia os dados brutos do banco para o formato do relatório
                     dadosFormatados = json.dados.map(item => ({
-                        data: item.datapartoprevisto || item.datacobertura, // Usa previsão ou cobertura
-                        lote: `Matriz ${item.brincofemea || item.brincoPorca}`,
-                        qtd: item.qtdeleitoes || 0,
+                        // Tenta pegar data de parto ou cobertura. Postgres retorna minúsculo.
+                        data: item.datapartoprevisto || item.dataPartoPrevisao || item.datacobertura || item.dataCobertura,
+                        lote: `Matriz ${item.brincofemea || item.brincoPorca || 'S/N'}`,
+                        qtd: item.qtdeleitoes || item.quantidadeLeitoes || 0,
                         obs: item.status // Ex: "lactante", "gestante"
                     }));
                 }
@@ -55,10 +60,11 @@ function inicializarModuloRelatorios() {
 
                 if (json.sucesso && json.dados) {
                     dadosFormatados = json.dados.map(item => ({
-                        data: item.datadesmame || item.datanascimento, // Data do desmame ou nascimento
-                        lote: item.lotenome,
-                        qtd: item.quantidadeleitoes,
-                        obs: item.pesomedio ? `Peso Médio: ${item.pesomedio}kg` : item.status
+                        data: item.datadesmame || item.dataDesmame || item.datanascimento || item.dataNascimento,
+                        lote: item.lotenome || item.loteNome,
+                        qtd: item.quantidadeleitoes || item.quantidadeLeitoes,
+                        // Formata a observação
+                        obs: (item.pesomedio || item.pesoMedio) ? `Peso Médio: ${item.pesomedio || item.pesoMedio}kg` : item.status
                     }));
                 }
             }
@@ -79,15 +85,15 @@ function inicializarModuloRelatorios() {
 function renderizarTabelaRelatorios(tbody, dados) {
     tbody.innerHTML = ""; // Limpa carregamento
 
-    if (dados.length === 0) {
+    if (!dados || dados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Nenhum registro encontrado para este relatório.</td></tr>`;
         return;
     }
 
     dados.forEach((item) => {
-        // Formata data cortando o ISO string se necessário
+        // Formata data cortando o ISO string se necessário (YYYY-MM-DDTHH:mm...)
         let dataExibicao = item.data;
-        if (dataExibicao && dataExibicao.includes('T')) {
+        if (dataExibicao && typeof dataExibicao === 'string' && dataExibicao.includes('T')) {
             dataExibicao = dataExibicao.split('T')[0];
         }
 

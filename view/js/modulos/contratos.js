@@ -4,7 +4,8 @@
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL = 'http://localhost:3000';
+// Ajustado para uso relativo (mesmo domínio do servidor web)
+const API_URL = '';
 
 // Variáveis de Estado
 let contratoEditando = null;
@@ -28,7 +29,9 @@ async function fetchContratos() {
         }
     } catch (error) {
         console.error("Erro de conexão:", error);
-        mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        }
         return [];
     }
 }
@@ -173,11 +176,13 @@ async function carregarContratos(perfil) {
     // Ordena por data de vencimento (mais próximos primeiro)
     // OBS: O Postgres pode retornar dataVencimento ou datavencimento (case sensitive no JS)
     // Vamos garantir que acessamos a propriedade correta.
-    contratos.sort((a, b) => {
-        const dataA = new Date(a.dataVencimento || a.datavencimento);
-        const dataB = new Date(b.dataVencimento || b.datavencimento);
-        return dataA - dataB;
-    });
+    if (contratos && contratos.length > 0) {
+        contratos.sort((a, b) => {
+            const dataA = new Date(a.dataVencimento || a.datavencimento);
+            const dataB = new Date(b.dataVencimento || b.datavencimento);
+            return dataA - dataB;
+        });
+    }
 
     tabelaBody.innerHTML = '';
     if (!contratos || contratos.length === 0) {
@@ -239,8 +244,6 @@ async function abrirModalContrato(id) {
     
     if (id) {
         // Modo Edição: Buscamos o contrato atualizado do servidor ou da lista em memória
-        // Para simplificar e garantir dados frescos, fazemos um fetch de todos e filtramos,
-        // mas idealmente teríamos um endpoint GET /contratos/:id
         const contratos = await fetchContratos(); 
         contratoEditando = contratos.find(c => c.id == id); // == para pegar string vs number
         
@@ -251,7 +254,6 @@ async function abrirModalContrato(id) {
             document.getElementById('contrato-objeto').value = contratoEditando.objeto;
             
             // Ajuste de data para o input type="date" (YYYY-MM-DD)
-            // O banco pode retornar data completa ISO. Precisamos cortar.
             const dtInicio = contratoEditando.dataInicio || contratoEditando.datainicio;
             const dtVenc = contratoEditando.dataVencimento || contratoEditando.datavencimento;
 
@@ -321,8 +323,6 @@ async function handleSalvarContrato(e) {
  * @param {number} id - O ID do contrato a ser excluído.
  */
 function handleExcluirContrato(id) {
-    // Busca rápida apenas para mostrar o nome na confirmação (opcional)
-    // Se quiser performance máxima, pode passar o nome via parâmetro no botão
     const onConfirm = async () => {
         try {
             await deleteContrato(id);

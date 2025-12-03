@@ -4,7 +4,8 @@
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL = 'http://localhost:3000';
+// Ajustado para uso relativo
+const API_URL = '';
 
 // --- API REAL (Integração com Back-end) ---
 
@@ -20,7 +21,6 @@ async function fetchUsuarios() {
         if (data.sucesso) {
             // MAPEAMENTO: O banco retorna { nickname, nome, tipo }
             // O front espera { idLogin, nome, perfil }
-            // Vamos converter aqui para não quebrar a tela
             return data.dados.map(user => ({
                 idLogin: user.nickname, // Traduz nickname -> idLogin
                 nome: user.nome,
@@ -32,7 +32,9 @@ async function fetchUsuarios() {
         }
     } catch (error) {
         console.error("Erro de conexão:", error);
-        mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Erro', 'Não foi possível conectar ao servidor.');
+        }
         return [];
     }
 }
@@ -140,7 +142,7 @@ async function inicializarModuloUsuarios() {
 
             // Validação simples
             if (dados.senha.length < 3) {
-                 mostrarNotificacao('Erro', 'A senha deve ter no mínimo 3 caracteres.');
+                 if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', 'A senha deve ter no mínimo 3 caracteres.');
                  return;
             }
 
@@ -151,9 +153,9 @@ async function inicializarModuloUsuarios() {
                 await saveUsuario(dados);
                 await carregarUsuarios(); // Recarrega a tabela
                 formNovoUsuario.reset();
-                mostrarNotificacao('Sucesso!', `Usuário "${dados.idLogin}" criado.`);
+                if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Sucesso!', `Usuário "${dados.idLogin}" criado.`);
             } catch (error) {
-                mostrarNotificacao('Erro ao Salvar', error.message);
+                if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro ao Salvar', error.message);
             } finally {
                 btnSalvarNovoUsuario.disabled = false;
                 btnSalvarNovoUsuario.textContent = 'Salvar Novo Usuário';
@@ -178,9 +180,9 @@ async function inicializarModuloUsuarios() {
                 await saveUsuario(dados);
                 await carregarUsuarios(); // Recarrega a tabela
                 fecharModalUsuario();
-                mostrarNotificacao('Sucesso!', `Usuário "${dados.idLogin}" atualizado.`);
+                if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Sucesso!', `Usuário "${dados.idLogin}" atualizado.`);
             } catch (error) {
-                mostrarNotificacao('Erro ao Salvar', error.message);
+                if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro ao Salvar', error.message);
             }
         });
     }
@@ -309,9 +311,9 @@ function handleExcluirUsuario(idLogin) {
         try {
             await deleteUsuario(idLogin);
             await carregarUsuarios(); 
-            mostrarNotificacao('Sucesso!', `Usuário "${idLogin}" foi excluído.`);
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Sucesso!', `Usuário "${idLogin}" foi excluído.`);
         } catch (error) {
-            mostrarNotificacao('Erro ao Excluir', error.message);
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro ao Excluir', error.message);
         }
     };
 

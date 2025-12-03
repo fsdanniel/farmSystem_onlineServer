@@ -8,8 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mensagemErro = document.getElementById('mensagem-erro');
 
     // CONFIGURAÇÃO DA API
-    // Se o seu backend estiver em outra URL ou porta, altere aqui.
-    const API_URL = 'http://localhost:3000'; 
+    // Como o server.js agora serve o site, deixamos vazio para usar a mesma origem (host e porta)
+    // Se fosse separado, seria 'http://localhost:3000'
+    const API_URL = ''; 
 
     // FUNÇÃO AUXILIAR PARA MOSTRAR ERROS 
     function mostrarErro(mensagem) {
@@ -31,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // LISTENER DE SUBMIT DO FORMULÁRIO (Integração Real)
-    // Note o uso de 'async' para podermos esperar a resposta do servidor
     form.addEventListener('submit', async (event) => {
         event.preventDefault(); 
         
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const usuarioId = idGranjaInput.value.trim();
         const senha = senhaInput.value.trim();
 
-        // Validação 1: Campos vazios (Front-end validation)
+        // Validação 1: Campos vazios
         if (!usuarioId || !senha) {
             mostrarErro('Por favor, preencha todos os campos.');
             return;
@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // CHAMADA REAL AO CONTROLE (Back-end)
+            // A rota combinada com API_URL fica: "/login"
             const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: {
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 // O servidor espera: { usuario, senha }
                 body: JSON.stringify({
-                    usuario: usuarioId, // Mapeando o input do HTML para a chave da API
+                    usuario: usuarioId, 
                     senha: senha
                 })
             });
@@ -70,9 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Verifica a resposta do servidor
             if (dados.sucesso) {
                 // SUCESSO!
-                
                 // O servidor retorna { sucesso: true, usuario: "...", tipo: "..." }
-                // Vamos salvar conforme a lógica da sua View esperava:
+                
                 localStorage.setItem('perfilUsuario', dados.tipo); 
                 localStorage.setItem('nomeUsuario', dados.usuario);
 
@@ -80,22 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'app.html';
             } else {
                 // FALHA (Credenciais inválidas ou erro de negócio)
-                // O servidor retorna "motivo" quando falha
                 let mensagem = 'Usuário ou Senha incorretos.';
                 
-                // Traduzindo mensagens técnicas do backend para o usuário, se necessário
                 if (dados.motivo === 'usuario_ou_senha_faltando') mensagem = 'Dados incompletos.';
+                if (dados.motivo === 'credenciais_invalidas') mensagem = 'Usuário ou senha inválidos.';
                 
                 mostrarErro(mensagem);
             }
 
         } catch (error) {
-            // ERRO DE CONEXÃO (Servidor desligado, internet caiu, etc)
             console.error('Erro na requisição:', error);
             mostrarErro('Erro ao conectar com o servidor. Verifique se o sistema está online.');
         } finally {
-            // Sempre executa isso no final, dando erro ou sucesso (se não redirecionar antes)
-            // Reabilita o botão caso o login falhe
+            // Reabilita o botão caso o login falhe ou dê erro
+            // Se redirecionar, a página vai mudar, então isso não afeta
             if (!window.location.href.includes('app.html')) {
                 botaoLogin.disabled = false;
                 botaoLogin.textContent = 'Entrar';

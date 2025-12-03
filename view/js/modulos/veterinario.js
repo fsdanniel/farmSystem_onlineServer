@@ -4,7 +4,9 @@
 
 "use strict";
 
-const API_URL = 'http://localhost:3000';
+// CONFIGURAÇÃO DA API
+// Ajustado para uso relativo (mesmo domínio do servidor web)
+const API_URL = '';
 
 // === VARIÁVEIS DE ESTADO DO MÓDULO ===
 let geneticaEditando = null;
@@ -125,9 +127,6 @@ async function fetchOcorrencias() {
 async function saveOcorrencia(dados) {
     // Server usa POST único. Espera chaves específicas.
     // { id, lote (nome/id?), tipo... }
-    // No server.js: const loteNome = ocData.lotenome || ocData.loteNome;
-    // Procedure 'novaocorrencia' geralmente espera o nome ou id dependendo da implementação SQL.
-    // Vamos enviar o Nome do Lote conforme lógica antiga que parecia funcionar com o backend
     
     const body = {
         id: dados.id, // Se tiver ID, é edição
@@ -167,7 +166,7 @@ async function fetchBercarios() {
         const json = await response.json();
         return (json.dados || []).map(b => ({
             id: b.id,
-            loteId: null, // Backend procedure antiga salvava nome, não ID relacional direto na view
+            loteId: null, 
             loteNome: b.lotenome,
             quantidadeLeitoes: b.quantidadeleitoes,
             dataNascimento: b.datanascimento ? b.datanascimento.split('T')[0] : '',

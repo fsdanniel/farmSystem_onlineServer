@@ -1,15 +1,15 @@
 // Arquivo: js/modulos/insumos.js
 // Módulo responsável pela lógica da seção "Gestão de Insumos"
-// VERSÃO 3.0 (Integrado com API Real)
+// VERSÃO FINAL (Integrado com API Real e Web Server)
 
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL = 'http://localhost:3000';
+// Ajustado para uso relativo (mesmo domínio do servidor web)
+const API_URL = '';
 
 // === CONFIGURAÇÃO (Front-end) ===
-// Mantemos essa lista aqui para popular o Select, já que o banco 
-// armazena o nome/texto do insumo nas procedures atuais.
+// Mantemos essa lista aqui para popular o Select e mapear unidades
 const TIPOS_INSUMO = [
     { id: 'milho_kg', nome: 'Milho (em grão)', unidade: 'kg' },
     { id: 'soja_kg', nome: 'Farelo de Soja', unidade: 'kg' },
@@ -30,9 +30,7 @@ async function fetchHistoricoCompras() {
         const data = await response.json();
 
         if (data.sucesso) {
-            // O servidor retorna colunas em minúsculo (padrão Postgres)
-            // Vamos garantir que os nomes batam com o que o renderizador espera
-            // ou adaptar o renderizador. Aqui, retornamos os dados crus do banco.
+            // Retorna os dados crus. O tratamento de minúsculas (postgres) é feito no render.
             return data.dados; 
         } else {
             console.error("Erro ao buscar histórico:", data.erro);
@@ -40,7 +38,9 @@ async function fetchHistoricoCompras() {
         }
     } catch (error) {
         console.error("Erro de conexão:", error);
-        mostrarNotificacao('Erro', 'Erro ao buscar histórico.');
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Erro', 'Erro ao buscar histórico de insumos.');
+        }
         return [];
     }
 }
@@ -69,13 +69,12 @@ async function fetchEstoque() {
 async function saveCompra(novaCompra) {
     console.log("BACKEND (REAL): Salvando nova compra...", novaCompra);
     
-    // O backend espera: { nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro }
-    // Precisamos mapear os campos do formulário para o formato da API
-    
     // 1. Descobrir o NOME do insumo baseado no ID selecionado
+    // O backend espera o nome por extenso para salvar na tabela
     const tipoInsumo = TIPOS_INSUMO.find(t => t.id === novaCompra.insumoId);
     const nomeReal = tipoInsumo ? tipoInsumo.nome : novaCompra.insumoId;
 
+    // Body conforme esperado pela rota POST /insumos no server.js
     const body = {
         nome: nomeReal,
         dataCompra: novaCompra.data,
@@ -147,7 +146,9 @@ async function inicializarModuloInsumos() {
 
     // 3. Listeners
     formCompra.addEventListener('submit', handleRegistrarCompra);
-    tbodyHistoricoCompras.addEventListener('click', handleExcluirCompra);
+    if (tbodyHistoricoCompras) {
+        tbodyHistoricoCompras.addEventListener('click', handleExcluirCompra);
+    }
     
     // Data de hoje como padrão
     if(inputData) inputData.value = new Date().toISOString().split('T')[0];
@@ -166,7 +167,6 @@ function popularSelectInsumos() {
 
 /**
  * Renderiza o histórico vindo do banco.
- * O banco retorna colunas como: id, nome, datacompra, quantidade, nomefornecedor, custototal
  */
 function renderizarHistoricoInsumos(compras) {
     if (!tbodyHistoricoCompras) return;
@@ -177,8 +177,7 @@ function renderizarHistoricoInsumos(compras) {
         return;
     }
     
-    // O backend já deve retornar ordenado ou ordenamos aqui
-    // Adaptação para campos minúsculos do Postgres
+    // Ordenação por data (decrescente)
     compras.sort((a, b) => {
         const dateA = new Date(a.datacompra || a.dataCompra);
         const dateB = new Date(b.datacompra || b.dataCompra);
@@ -186,9 +185,13 @@ function renderizarHistoricoInsumos(compras) {
     });
 
     compras.forEach(compra => {
-        const id = compra.id; // ID vindo do banco
+        // Adaptação para campos minúsculos do Postgres
+        const id = compra.id;
         const nome = compra.nome;
-        const data = formatarData((compra.datacompra || compra.dataCompra).split('T')[0]);
+        // Corta o tempo da data ISO
+        const dataRaw = compra.datacompra || compra.dataCompra;
+        const data = formatarData(dataRaw ? dataRaw.split('T')[0] : '');
+        
         const qtd = compra.quantidade;
         const fornecedor = compra.nomefornecedor || compra.nomeFornecedor || 'N/D';
         const custo = compra.custototal || compra.custoTotal;
@@ -210,7 +213,6 @@ function renderizarHistoricoInsumos(compras) {
 
 /**
  * Renderiza o estoque vindo da API (/insumos/estoque).
- * Não calculamos mais no front!
  */
 function renderizarEstoqueAtual(dadosEstoque) {
     if (!tbodyEstoqueAtual) return;
@@ -222,8 +224,8 @@ function renderizarEstoqueAtual(dadosEstoque) {
     }
 
     dadosEstoque.forEach(item => {
-        // O banco deve retornar: nome, total (quantidade somada)
-        // Tentamos deduzir a unidade pelo nome na nossa lista estática para exibir bonitinho
+        // O banco retorna: nome, total
+        // Tentamos deduzir a unidade pelo nome na nossa lista estática
         const tipoLocal = TIPOS_INSUMO.find(t => t.nome === item.nome);
         const unidade = tipoLocal ? tipoLocal.unidade : 'un';
         
@@ -244,7 +246,6 @@ async function handleRegistrarCompra(e) {
     e.preventDefault();
     
     const novaCompra = {
-        // Não geramos ID no front, o banco gera
         insumoId: selectInsumo.value, // ID local (ex: milho_kg)
         data: inputData.value,
         quantidade: parseFloat(inputQuantidade.value),
@@ -253,7 +254,11 @@ async function handleRegistrarCompra(e) {
     };
 
     if (!novaCompra.insumoId || !novaCompra.data || isNaN(novaCompra.quantidade) || novaCompra.quantidade <= 0) {
-        mostrarNotificacao('Erro!', 'Preencha os campos corretamente.');
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Erro!', 'Preencha os campos corretamente.');
+        } else {
+            alert('Preencha os campos corretamente.');
+        }
         return;
     }
 
@@ -267,9 +272,15 @@ async function handleRegistrarCompra(e) {
         formCompra.reset();
         if(inputData) inputData.value = new Date().toISOString().split('T')[0];
         
-        mostrarNotificacao('Sucesso!', 'Compra registrada.');
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Sucesso!', 'Compra registrada.');
+        }
     } catch (error) {
-        mostrarNotificacao('Erro!', error.message);
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao('Erro!', error.message);
+        } else {
+            alert(error.message);
+        }
     } finally {
         botaoRegistrar.disabled = false;
         botaoRegistrar.textContent = 'Registrar Compra';
@@ -280,15 +291,21 @@ async function handleExcluirCompra(e) {
     const botao = e.target.closest('[data-delete-compra-id]');
     if (!botao) return; 
 
-    const compraId = botao.dataset.deleteCompraId; // ID pode ser string ou number vindo do banco
+    const compraId = botao.dataset.deleteCompraId;
     
     const onConfirm = async () => {
         try {
             await deleteCompra(compraId);
             await atualizarTabelasInsumos();
-            mostrarNotificacao('Excluído!', 'Registro excluído.');
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Excluído!', 'Registro excluído.');
+            }
         } catch (error) {
-            mostrarNotificacao('Erro!', error.message);
+            if (typeof mostrarNotificacao === 'function') {
+                mostrarNotificacao('Erro!', error.message);
+            } else {
+                alert(error.message);
+            }
         }
     };
     

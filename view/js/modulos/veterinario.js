@@ -1,11 +1,9 @@
 // Arquivo: js/modulos/veterinario.js
 // Módulo principal que gerencia as seções do Veterinário e Produção
-// VERSÃO 3.0 (Integrado com API Real e Mapeamento de Dados)
+// VERSÃO 3.8 (Correção Definitiva: Mapeamento de idgen)
 
 "use strict";
 
-// CONFIGURAÇÃO DA API
-// Ajustado para uso relativo (mesmo domínio do servidor web)
 const API_URL = '';
 
 // === VARIÁVEIS DE ESTADO DO MÓDULO ===
@@ -25,9 +23,17 @@ async function fetchGeneticas() {
     try {
         const response = await fetch(`${API_URL}/geneticas`);
         const json = await response.json();
-        // Backend retorna: { id, nome, descricao, caracteristicas, status }
-        // Front espera: mesmo formato.
-        return json.dados || [];
+        
+        if (!json.dados || json.dados.length === 0) return [];
+
+        return json.dados.map(g => ({
+            // CORREÇÃO CRÍTICA: Mapeia 'idgen' (do banco) para 'id' (do front)
+            id: parseInt(g.idgen || g.id || 0), 
+            nome: g.nome,
+            descricao: g.descricao,
+            caracteristicas: g.caracteristicas,
+            status: g.status
+        }));
     } catch (e) {
         console.error("Erro ao buscar genéticas:", e);
         return [];
@@ -35,18 +41,25 @@ async function fetchGeneticas() {
 }
 
 async function saveGenetica(dados) {
-    // Server usa POST único com verificação de ID interno
     const response = await fetch(`${API_URL}/geneticas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados) // { id (se edição), nome, descricao... }
+        body: JSON.stringify(dados)
     });
-    return await response.json();
+    const json = await response.json();
+    
+    // Tratamento de erro vindo do servidor
+    if (!json.sucesso) {
+        throw new Error(json.erro || "Erro desconhecido ao salvar genética.");
+    }
+    return json;
 }
 
 async function deleteGenetica(id) {
     const response = await fetch(`${API_URL}/geneticas/${id}`, { method: 'DELETE' });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao excluir.");
+    return json;
 }
 
 // --- LOTES ---
@@ -54,13 +67,12 @@ async function fetchLotes() {
     try {
         const response = await fetch(`${API_URL}/lotes`);
         const json = await response.json();
-        // Mapeamento: Backend (snake/lower) -> Frontend (camelCase)
         return (json.dados || []).map(l => ({
-            id: l.id,
+            id: parseInt(l.id),
             nome: l.nome,
-            geneticaId: l.genetica, // O banco retorna o ID ou Nome dependendo da query, ajustaremos no select
-            geneticaNome: l.geneticanome || l.genetica, // Tenta pegar nome se vier join
-            quantidadeAnimais: parseInt(l.quantidade),
+            geneticaId: parseInt(l.genetica), 
+            geneticaNome: l.geneticanome || l.genetica, 
+            quantidadeAnimais: parseInt(l.quantidade || 0),
             dataCriacao: l.datacriacao ? l.datacriacao.split('T')[0] : '',
             status: l.status
         }));
@@ -74,10 +86,9 @@ async function saveLote(dados) {
     const method = dados.id ? 'PUT' : 'POST';
     const url = dados.id ? `${API_URL}/lotes/${dados.id}` : `${API_URL}/lotes`;
     
-    // Server espera: { nome, genetica (ID), quantidade, dataCriacao, status }
     const body = {
         nome: dados.nome,
-        genetica: dados.geneticaId, // Enviamos o ID da genética
+        genetica: dados.geneticaId,
         quantidade: dados.quantidadeAnimais,
         dataCriacao: dados.dataCriacao,
         status: dados.status
@@ -88,12 +99,16 @@ async function saveLote(dados) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar lote.");
+    return json;
 }
 
 async function deleteLote(id) {
     const response = await fetch(`${API_URL}/lotes/${id}`, { method: 'DELETE' });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao excluir lote.");
+    return json;
 }
 
 // --- OCORRÊNCIAS ---
@@ -101,17 +116,16 @@ async function fetchOcorrencias() {
     try {
         const response = await fetch(`${API_URL}/ocorrencias`);
         const json = await response.json();
-        // Mapeamento
         return (json.dados || []).map(o => ({
-            id: o.id,
-            loteId: o.loteid || null, // Se vier do banco
+            id: parseInt(o.id),
+            loteId: o.loteid ? parseInt(o.loteid) : null, 
             loteNome: o.lote || o.lotenome,
             tipo: o.tipo,
             prioridade: o.prioridade,
-            dataHora: o.data || o.datahora, // Banco pode retornar 'data' ou 'datahora'
+            dataHora: o.data || o.datahora, 
             titulo: o.titulo,
             descricao: o.descricao,
-            animaisAfetados: o.quantidadeanimaisafetados || o.animaisafetados,
+            animaisAfetados: parseInt(o.quantidadeanimaisafetados || o.animaisafetados || 0),
             medicamentoAplicado: o.medicamentoaplicado,
             dosagem: o.dosagem,
             veterinarioResponsavel: o.responsavel || o.veterinarioresponsavel,
@@ -125,17 +139,14 @@ async function fetchOcorrencias() {
 }
 
 async function saveOcorrencia(dados) {
-    // Server usa POST único. Espera chaves específicas.
-    // { id, lote (nome/id?), tipo... }
-    
     const body = {
-        id: dados.id, // Se tiver ID, é edição
-        lote: dados.loteNome, // Enviando NOME conforme backend parece esperar na procedure
-        loteNome: dados.loteNome, // Redundância para garantir
+        id: dados.id,
+        lote: dados.loteNome,
+        loteNome: dados.loteNome,
         tipo: dados.tipo,
         prioridade: dados.prioridade,
         data: dados.dataHora,
-        hora: dados.dataHora ? dados.dataHora.split('T')[1] : '00:00', // Se backend pedir hora separada
+        hora: dados.dataHora ? dados.dataHora.split('T')[1] : '00:00',
         titulo: dados.titulo,
         descricao: dados.descricao,
         quantidadeAnimaisAfetados: dados.animaisAfetados,
@@ -151,12 +162,16 @@ async function saveOcorrencia(dados) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar ocorrência.");
+    return json;
 }
 
 async function deleteOcorrencia(id) {
     const response = await fetch(`${API_URL}/ocorrencias/${id}`, { method: 'DELETE' });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao excluir.");
+    return json;
 }
 
 // --- BERÇÁRIO ---
@@ -165,12 +180,13 @@ async function fetchBercarios() {
         const response = await fetch(`${API_URL}/bercario`);
         const json = await response.json();
         return (json.dados || []).map(b => ({
-            id: b.id,
+            id: parseInt(b.id),
             loteId: null, 
             loteNome: b.lotenome,
-            quantidadeLeitoes: b.quantidadeleitoes,
+            // Correção para ler quantidade corretamente e evitar NaN
+            quantidadeLeitoes: parseInt(b.quantidadeleitoes || b.qtdeleitoes || 0),
             dataNascimento: b.datanascimento ? b.datanascimento.split('T')[0] : '',
-            pesoMedio: b.pesomedio,
+            pesoMedio: parseFloat(b.pesomedio || 0),
             dataDesmame: b.datadesmame ? b.datadesmame.split('T')[0] : null,
             status: b.status
         }));
@@ -178,10 +194,9 @@ async function fetchBercarios() {
 }
 
 async function saveBercario(dados) {
-    // Server espera POST. Body: { id, loteNome, quantidadeLeitoes... }
     const body = {
         id: dados.id,
-        loteNome: dados.loteNome, // Backend pede Nome
+        loteNome: dados.loteNome,
         quantidadeLeitoes: dados.quantidadeLeitoes,
         dataNascimento: dados.dataNascimento,
         pesoMedio: dados.pesoMedio,
@@ -194,12 +209,16 @@ async function saveBercario(dados) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar berçário.");
+    return json;
 }
 
 async function deleteBercario(id) {
     const response = await fetch(`${API_URL}/bercario/${id}`, { method: 'DELETE' });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao excluir.");
+    return json;
 }
 
 // --- MATERNIDADE ---
@@ -208,24 +227,23 @@ async function fetchMaternidades() {
         const response = await fetch(`${API_URL}/maternidades`);
         const json = await response.json();
         return (json.dados || []).map(m => ({
-            id: m.id,
+            id: parseInt(m.id),
             brincoPorca: m.brincofemea || m.brincoPorca,
-            geneticaId: m.genetica, // ID
-            geneticaNome: m.geneticanome || m.genetica, // Nome se vier do join
+            geneticaId: parseInt(m.genetica), 
+            geneticaNome: m.geneticanome || m.genetica,
             dataCobertura: m.datacobertura ? m.datacobertura.split('T')[0] : '',
             dataPartoPrevisao: m.datapartoprevisto ? m.datapartoprevisto.split('T')[0] : '',
-            quantidadeLeitoes: m.qtdeleitoes,
+            quantidadeLeitoes: parseInt(m.qtdeleitoes || m.quantidadeleitoes || 0),
             status: m.status
         }));
     } catch (e) { return []; }
 }
 
 async function saveMaternidade(dados) {
-    // Server espera POST. Body: { id, brincoFemea, genetica (ID)... }
     const body = {
         id: dados.id,
         brincoFemea: dados.brincoPorca,
-        genetica: dados.geneticaId, // ID
+        genetica: dados.geneticaId,
         dataCobertura: dados.dataCobertura,
         dataPartoPrevisto: dados.dataPartoPrevisao,
         qtdeLeitoes: dados.quantidadeLeitoes,
@@ -237,12 +255,16 @@ async function saveMaternidade(dados) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar maternidade.");
+    return json;
 }
 
 async function deleteMaternidade(id) {
     const response = await fetch(`${API_URL}/maternidades/${id}`, { method: 'DELETE' });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao excluir.");
+    return json;
 }
 
 // --- INSEMINAÇÃO ---
@@ -251,9 +273,9 @@ async function fetchInseminacoes() {
         const response = await fetch(`${API_URL}/inseminacoes`);
         const json = await response.json();
         return (json.dados || []).map(i => ({
-            id: i.id,
+            id: parseInt(i.id),
             brincoFemea: i.brincofemea,
-            geneticaMachoId: i.geneticamacho,
+            geneticaMachoId: parseInt(i.geneticamacho),
             geneticaMachoNome: i.geneticamachonome || i.geneticamacho,
             dataInseminacao: i.datainseminacao ? i.datainseminacao.split('T')[0] : '',
             tecnica: i.tecnica,
@@ -264,7 +286,6 @@ async function fetchInseminacoes() {
 }
 
 async function saveInseminacao(dados) {
-    // Server espera POST.
     const body = {
         id: dados.id,
         brincoFemea: dados.brincoFemea,
@@ -280,24 +301,27 @@ async function saveInseminacao(dados) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar inseminação.");
+    return json;
 }
 
 async function deleteInseminacao(id) {
     const response = await fetch(`${API_URL}/inseminacoes/${id}`, { method: 'DELETE' });
-    return await response.json();
+    const json = await response.json();
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao excluir.");
+    return json;
 }
 
 
 // =================================================================
-// === FUNÇÕES DE INICIALIZAÇÃO E UI (Mantidas e adaptadas) ===
+// === FUNÇÕES DE INICIALIZAÇÃO E UI ===
 // =================================================================
 
 function carregarDadosVeterinario() {
-    // Pega do localStorage, que foi setado no login
     const nome = localStorage.getItem('nomeUsuario') || 'Veterinário';
-    // veterinarioLogado agora é apenas visual
-    document.getElementById('nome-veterinario-header').textContent = nome;
+    const header = document.getElementById('nome-veterinario-header');
+    if (header) header.textContent = nome;
 }
 
 async function atualizarNomeVeterinarioInterface() {
@@ -352,12 +376,9 @@ async function carregarLotes() {
         return;
     }
 
-    // Para exibir o nome da genética, precisamos cruzar os dados ou confiar no view
-    // Se o backend mandar apenas ID, buscamos as genéticas para mapear o nome
     const geneticas = await fetchGeneticas();
 
     data.forEach(lote => {
-        // Tenta achar o nome da genética se o backend retornou ID
         let nomeGen = lote.geneticaNome;
         if(!nomeGen && lote.geneticaId) {
             const g = geneticas.find(x => x.id == lote.geneticaId);
@@ -388,7 +409,6 @@ async function carregarOcorrencias() {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Carregando...</td></tr>';
 
     const data = await fetchOcorrencias();
-    // Ordenação no front
     data.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
     
     tbody.innerHTML = '';
@@ -468,7 +488,7 @@ async function carregarMaternidades() {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
 
     const data = await fetchMaternidades();
-    const geneticas = await fetchGeneticas(); // Para mapear nomes
+    const geneticas = await fetchGeneticas(); 
 
     tbody.innerHTML = '';
 
@@ -478,7 +498,6 @@ async function carregarMaternidades() {
     }
 
     data.forEach(maternidade => {
-        // Resolve nome da genética
         let nomeGen = maternidade.geneticaNome;
         if(!nomeGen && maternidade.geneticaId) {
             const g = geneticas.find(x => x.id == maternidade.geneticaId);
@@ -548,7 +567,7 @@ async function carregarInseminacoes() {
 }
 
 // =================================================================
-// === MODAIS (Lógica de UI + Chamada para API) ===
+// === MODAIS e LISTENERS (UI) ===
 // =================================================================
 
 // --- Genética ---
@@ -559,8 +578,12 @@ function abrirModalGenetica() {
     document.getElementById('modal-genetica').style.display = 'block';
 }
 async function editarGenetica(id) {
+    if (!id || isNaN(id)) return;
+
     const geneticas = await fetchGeneticas();
-    geneticaEditando = geneticas.find(g => g.id === id);
+    // Comparação não estrita (==) para achar "5" e 5
+    geneticaEditando = geneticas.find(g => g.id == id);
+    
     if (geneticaEditando) {
         document.getElementById('titulo-modal-genetica').textContent = 'Editar Genética';
         document.getElementById('nome-genetica').value = geneticaEditando.nome;
@@ -571,9 +594,8 @@ async function editarGenetica(id) {
     }
 }
 async function excluirGenetica(id) {
-    // Busca rápida para pegar o nome
     const geneticas = await fetchGeneticas();
-    const item = geneticas.find(g => g.id === id); 
+    const item = geneticas.find(g => g.id == id); 
     const nome = item ? item.nome : 'Item';
 
     const onConfirm = async () => {
@@ -581,12 +603,16 @@ async function excluirGenetica(id) {
             await deleteGenetica(id);
             await carregarGeneticas(); 
             await atualizarRelatorios();
-            mostrarNotificacao('Excluído!', 'Genética excluída com sucesso.');
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Excluído!', 'Genética excluída com sucesso.');
         } catch (e) {
-            mostrarNotificacao('Erro', 'Não foi possível excluir (verifique se há lotes vinculados).');
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message || 'Não foi possível excluir.');
         }
     };
-    mostrarConfirmacao('genética', id, nome, onConfirm);
+    if (typeof mostrarConfirmacao === 'function') {
+        mostrarConfirmacao('genética', id, nome, onConfirm);
+    } else {
+        if(confirm(`Excluir genética ${nome}?`)) onConfirm();
+    }
 }
 function fecharModalGenetica() { 
     const modal = document.getElementById('modal-genetica');
@@ -604,7 +630,7 @@ function abrirModalLote() {
 }
 async function editarLote(id) {
     const lotes = await fetchLotes();
-    loteEditando = lotes.find(l => l.id === id);
+    loteEditando = lotes.find(l => l.id == id);
     if (loteEditando) {
         document.getElementById('titulo-modal-lote').textContent = 'Editar Lote';
         document.getElementById('nome-lote').value = loteEditando.nome;
@@ -623,7 +649,7 @@ async function excluirLote(id) {
             await atualizarRelatorios();
             mostrarNotificacao('Excluído!', 'Lote excluído.');
         } catch (e) {
-            mostrarNotificacao('Erro', 'Erro ao excluir lote.');
+            mostrarNotificacao('Erro', e.message);
         }
     };
     mostrarConfirmacao('lote', id, 'este lote', onConfirm); 
@@ -640,7 +666,6 @@ function abrirModalOcorrencia() {
     document.getElementById('titulo-modal-ocorrencia').textContent = 'Nova Ocorrência';
     document.getElementById('form-ocorrencia').reset();
     
-    // Ajuste fuso horário para input datetime-local
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('data-hora-ocorrencia').value = now.toISOString().slice(0,16);
@@ -652,11 +677,10 @@ function abrirModalOcorrencia() {
 }
 async function editarOcorrencia(id) {
     const ocorrencias = await fetchOcorrencias();
-    ocorrenciaEditando = ocorrencias.find(o => o.id === id);
+    ocorrenciaEditando = ocorrencias.find(o => o.id == id);
     if (ocorrenciaEditando) {
         document.getElementById('titulo-modal-ocorrencia').textContent = 'Editar Ocorrência';
         
-        // Precisamos encontrar o ID do lote baseado no nome, pois o select usa ID
         const lotes = await fetchLotes();
         const loteObj = lotes.find(l => l.nome === ocorrenciaEditando.loteNome);
         if (loteObj) document.getElementById('lote-ocorrencia').value = loteObj.id;
@@ -664,9 +688,7 @@ async function editarOcorrencia(id) {
         document.getElementById('tipo-ocorrencia').value = ocorrenciaEditando.tipo;
         document.getElementById('prioridade-ocorrencia').value = ocorrenciaEditando.prioridade;
         
-        // Ajuste data para datetime-local
         if (ocorrenciaEditando.dataHora) {
-             // O banco traz ISO. O input quer YYYY-MM-DDTHH:mm
              document.getElementById('data-hora-ocorrencia').value = ocorrenciaEditando.dataHora.slice(0,16);
         }
 
@@ -682,19 +704,22 @@ async function editarOcorrencia(id) {
     }
 }
 async function visualizarOcorrencia(id) {
-    // (Mantido igual, mas buscando dados reais)
     const ocorrencias = await fetchOcorrencias();
-    const ocorrencia = ocorrencias.find(o => o.id === id);
+    const ocorrencia = ocorrencias.find(o => o.id == id);
     if (ocorrencia) {
         alert(`🔍 ID #${ocorrencia.id}\n${ocorrencia.titulo}\n\n${ocorrencia.descricao}`);
     }
 }
 async function excluirOcorrencia(id) { 
     const onConfirm = async () => {
-        await deleteOcorrencia(id);
-        await carregarOcorrencias(); 
-        await atualizarRelatorios();
-        mostrarNotificacao('Excluído!', 'Ocorrência excluída.');
+        try {
+            await deleteOcorrencia(id);
+            await carregarOcorrencias(); 
+            await atualizarRelatorios();
+            mostrarNotificacao('Excluído!', 'Ocorrência excluída.');
+        } catch(e) {
+            mostrarNotificacao('Erro', e.message);
+        }
     };
     mostrarConfirmacao('ocorrência', id, 'este item', onConfirm);
 }
@@ -714,11 +739,10 @@ function abrirModalBercario() {
 }
 async function editarBercario(id) {
     const bercarios = await fetchBercarios();
-    bercarioEditando = bercarios.find(b => b.id === id);
+    bercarioEditando = bercarios.find(b => b.id == id);
     if (bercarioEditando) {
         document.getElementById('titulo-modal-bercario').textContent = 'Editar Registro';
         
-        // Mapear nome p/ ID do select
         const lotes = await fetchLotes();
         const loteObj = lotes.find(l => l.nome === bercarioEditando.loteNome);
         if(loteObj) document.getElementById('lote-bercario').value = loteObj.id;
@@ -733,10 +757,14 @@ async function editarBercario(id) {
 }
 async function excluirBercario(id) { 
     const onConfirm = async () => {
-        await deleteBercario(id);
-        await carregarBercarios(); 
-        await atualizarRelatorios();
-        mostrarNotificacao('Excluído!', 'Registro excluído.');
+        try {
+            await deleteBercario(id);
+            await carregarBercarios(); 
+            await atualizarRelatorios();
+            mostrarNotificacao('Excluído!', 'Registro excluído.');
+        } catch(e) {
+            mostrarNotificacao('Erro', e.message);
+        }
     };
     mostrarConfirmacao('registro', id, `ID ${id}`, onConfirm);
 }
@@ -753,7 +781,6 @@ function abrirModalMaternidade() {
     document.getElementById('form-maternidade').reset();
     document.getElementById('modal-maternidade').style.display = 'block';
     
-    // Listener de data (mantido)
     const dtCob = document.getElementById('data-cobertura');
     const dtParto = document.getElementById('data-parto-prevista');
     dtCob.onchange = function() {
@@ -766,7 +793,7 @@ function abrirModalMaternidade() {
 }
 async function editarMaternidade(id) {
     const maternidades = await fetchMaternidades();
-    maternidadeEditando = maternidades.find(m => m.id === id);
+    maternidadeEditando = maternidades.find(m => m.id == id);
     if (maternidadeEditando) {
         document.getElementById('titulo-modal-maternidade').textContent = 'Editar Porca';
         document.getElementById('brinco-porca').value = maternidadeEditando.brincoPorca;
@@ -780,10 +807,14 @@ async function editarMaternidade(id) {
 }
 async function excluirMaternidade(id) { 
     const onConfirm = async () => {
-        await deleteMaternidade(id);
-        await carregarMaternidades(); 
-        await atualizarRelatorios();
-        mostrarNotificacao('Excluído!', 'Registro excluído.');
+        try {
+            await deleteMaternidade(id);
+            await carregarMaternidades(); 
+            await atualizarRelatorios();
+            mostrarNotificacao('Excluído!', 'Registro excluído.');
+        } catch(e) {
+            mostrarNotificacao('Erro', e.message);
+        }
     };
     mostrarConfirmacao('maternidade', id, 'este item', onConfirm);
 }
@@ -803,7 +834,7 @@ function abrirModalInseminacao() {
 }
 async function editarInseminacao(id) {
     const inseminacoes = await fetchInseminacoes();
-    inseminacaoEditando = inseminacoes.find(i => i.id === id);
+    inseminacaoEditando = inseminacoes.find(i => i.id == id);
     if (inseminacaoEditando) {
         document.getElementById('titulo-modal-inseminacao').textContent = 'Editar Inseminação';
         document.getElementById('brinco-femea').value = inseminacaoEditando.brincoFemea;
@@ -817,10 +848,14 @@ async function editarInseminacao(id) {
 }
 async function excluirInseminacao(id) { 
     const onConfirm = async () => {
-        await deleteInseminacao(id);
-        await carregarInseminacoes(); 
-        await atualizarRelatorios();
-        mostrarNotificacao('Excluído!', 'Registro excluído.');
+        try {
+            await deleteInseminacao(id);
+            await carregarInseminacoes(); 
+            await atualizarRelatorios();
+            mostrarNotificacao('Excluído!', 'Registro excluído.');
+        } catch(e) {
+            mostrarNotificacao('Erro', e.message);
+        }
     };
     mostrarConfirmacao('inseminação', id, 'este item', onConfirm);
 }
@@ -885,7 +920,6 @@ async function atualizarResumoOcorrencias(data) {
 
     const ocorrenciasCriticas = data.filter(o => o.prioridade === 'critica' && o.status !== 'resolvida').length;
     const ocorrenciasPendentes = data.filter(o => o.status === 'pendente' || o.status === 'em-andamento').length;
-    // Lógica simples de data
     const hojeStr = new Date().toISOString().split('T')[0];
     const ocorrenciasResolvidasHoje = data.filter(o => o.status === 'resolvida' && o.dataHora.startsWith(hojeStr)).length;
     
@@ -938,8 +972,10 @@ function configurarFormularios() {
             await carregarGeneticas();
             await atualizarRelatorios();
             fecharModalGenetica();
-            mostrarNotificacao('Sucesso', 'Genética salva.');
-        } catch(err) { mostrarNotificacao('Erro', 'Falha ao salvar genética'); }
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Sucesso', 'Genética salva.');
+        } catch(err) { 
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); 
+        }
     });
 
     // LOTE
@@ -961,7 +997,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalLote();
             mostrarNotificacao('Sucesso', 'Lote salvo.');
-        } catch(err) { mostrarNotificacao('Erro', 'Falha ao salvar lote'); }
+        } catch(err) { 
+            const msg = err.message || 'Falha ao salvar lote';
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
+        }
     });
 
     // OCORRÊNCIAS
@@ -996,7 +1035,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalOcorrencia();
             mostrarNotificacao('Sucesso', 'Ocorrência salva.');
-        } catch(err) { mostrarNotificacao('Erro', 'Falha ao salvar ocorrência'); }
+        } catch(err) { 
+            const msg = err.message || 'Falha ao salvar ocorrência';
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
+        }
     });
 
     // BERÇÁRIO
@@ -1022,7 +1064,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalBercario();
             mostrarNotificacao('Sucesso', 'Berçário salvo.');
-        } catch(err) { mostrarNotificacao('Erro', 'Falha ao salvar berçário'); }
+        } catch(err) { 
+            const msg = err.message || 'Falha ao salvar berçário';
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
+        }
     });
 
     // MATERNIDADE
@@ -1045,7 +1090,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalMaternidade();
             mostrarNotificacao('Sucesso', 'Maternidade salva.');
-        } catch(err) { mostrarNotificacao('Erro', 'Falha ao salvar maternidade'); }
+        } catch(err) { 
+            const msg = err.message || 'Falha ao salvar maternidade';
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
+        }
     });
 
     // INSEMINAÇÃO
@@ -1068,7 +1116,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalInseminacao();
             mostrarNotificacao('Sucesso', 'Inseminação salva.');
-        } catch(err) { mostrarNotificacao('Erro', 'Falha ao salvar inseminação'); }
+        } catch(err) { 
+            const msg = err.message || 'Falha ao salvar inseminação';
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
+        }
     });
 }
 

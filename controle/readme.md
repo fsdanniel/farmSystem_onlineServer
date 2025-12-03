@@ -137,7 +137,7 @@ geneticas, lotesAtivos, animaisAtivos, quarentena, bercario, gestantes, lactante
 { ok: false, erro: "Tipo inválido. Use: partos | desmames" }
 ```
 
-# 📦 Lotes (`/lotes`)
+#  Lotes (`/lotes`)
 
 Gerencia agrupamentos de animais, permitindo cadastro, edição e exclusão de lotes vinculados a uma genética específica.
 
@@ -152,7 +152,7 @@ Gerencia agrupamentos de animais, permitindo cadastro, edição e exclusão de l
 
 ---
 
-# 👶 Maternidade (`/maternidades`)
+#  Maternidade (`/maternidades`)
 
 Gerencia dados de porcas prenhas, controle de cobertura, previsão de parto e histórico reprodutivo.
 
@@ -166,7 +166,7 @@ Gerencia dados de porcas prenhas, controle de cobertura, previsão de parto e hi
 
 ---
 
-# 🚨 Ocorrências (`/ocorrencias`)
+#  Ocorrências (`/ocorrencias`)
 
 Registra eventos relacionados à saúde, mortalidade, manejo e intervenções aplicadas.
 

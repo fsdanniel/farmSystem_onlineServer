@@ -10,7 +10,7 @@
 //=======
 console.log("🚀 Carregando módulo Insumos v3.1...");
 
-const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
+const API_URL = 'https://undeluded-filmier-eusebio.ngrok-free.dev/api';
 //>>>>>>> 2fb8d710fa4ece12b9f67e2c4b251bc9decbe47e
 
 // === CONFIGURAÇÃO (Front-end) ===

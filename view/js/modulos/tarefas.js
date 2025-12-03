@@ -5,7 +5,7 @@
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL_TAREFAS = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
+const API_URL_TAREFAS = 'https://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 // Variáveis de Estado
 let tarefaEditando = null;

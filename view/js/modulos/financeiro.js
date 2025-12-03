@@ -5,7 +5,7 @@
 
 // CONFIGURAÇÃO DA API
 // Ajustado para uso relativo (mesmo domínio do servidor web)
-const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
+const API_URL = 'https://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 // --- API REAL (Integração com Back-end) ---
 

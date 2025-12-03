@@ -67,3 +67,72 @@ Quando a função `verificaLogin` não encontra correspondência.
 ```
 { "sucesso": false, "motivo": "credenciais_invalidas" }
 ```
+---
+
+## Inseminações (`/inseminacoes`)
+
+Gerencia registros de inseminação, permitindo criação, edição, listagem e exclusão.
+
+## 🔗 Endpoints de Inseminações
+
+| Método     | Rota                | Descrição                                                                   | Body                                                                                                                                                            | Resposta de sucesso                                                                 | Procedure/Function                                               |
+| ---------- | ------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **GET**    | `/inseminacoes`     | Lista todas as inseminações cadastradas.                                    | Não se aplica.                                                                                                                                                  | `{ sucesso: true, dados: [...] }`                                                   | `buscaInseminacao(NULL, NULL)`                                   |
+| **POST**   | `/inseminacoes`     | Cria ou edita uma inseminação (upsert). Se `id` estiver presente, é edição. | **Sem id (criação):** brincoFemea, geneticaMacho, dataInseminacao, tecnica, resultado, dataVerificacao. <br> **Com id (edição):** todos os campos incluindo id. | `{ sucesso: true, operacao: "criado" }` ou `{ sucesso: true, operacao: "editado" }` | `novoRegistroInseminacao(...)`, `editarRegistroInseminacao(...)` |
+| **DELETE** | `/inseminacoes/:id` | Exclui inseminação pelo ID.                                                 | Não se aplica.                                                                                                                                                  | `{ sucesso: true, operacao: "excluido" }`                                           | `excluirRegistroInseminacao($1)`                                 |
+
+### 📌 Observações Importantes
+
+O endpoint POST funciona como upsert: cria se não houver id, edita se houver.
+
+Os campos de datas devem estar em formato aceito pelo PostgreSQL (YYYY-MM-DD).
+
+---
+
+## Insumos (`/insumos`)
+
+Gerencia compras de insumos, estoque atual e histórico.
+
+## 🔗 Endpoints de Insumos
+
+| Método     | Rota                 | Descrição                           | Body                                                                      | Resposta de sucesso                       | Procedure/Function    |
+| ---------- | -------------------- | ----------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------- | --------------------- |
+| **POST**   | `/insumos`           | Registra a compra de insumos.       | nome, dataCompra, quantidade, nomeFornecedor, custoTotal, statusRegistro. | `{ sucesso: true, operacao: "criado" }`   | `comprarInsumos(...)` |
+| **DELETE** | `/insumos/:id`       | Exclui um registro de insumo.       | Não se aplica.                                                            | `{ sucesso: true, operacao: "excluido" }` | `excluirInsumos($1)`  |
+| **GET**    | `/insumos/historico` | Lista todas as compras registradas. | Não se aplica.                                                            | `{ sucesso: true, dados: [...] }`         | `historicoInsumos()`  |
+| **GET**    | `/insumos/estoque`   | Retorna o estoque atual de insumos. | Não se aplica.                                                            | `{ sucesso: true, dados: [...] }`         | `estoqueInsumos()`    |
+
+### ✔️ Validações
+
+Todos os campos do POST são obrigatórios.
+
+Quantidade e custo devem ser valores numéricos válidos.
+
+---
+
+## Relatórios (`/api/relatorios`)
+
+Fornece dados agregados e relatórios filtrados por tipo e período.
+
+## 📌 Resumo Geral
+
+| Método  | Rota                     | Descrição                           | Body           | Resposta de sucesso                | Funções utilizadas                                                                                                                                                                                                                                        |
+| ------- | ------------------------ | ----------------------------------- | -------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GET** | `/api/relatorios/resumo` | Retorna contagens gerais da granja. | Não se aplica. | `{ ok: true, resultado: { ... } }` | `quantidadeGeneticasAtivas()`, `quantidadeLotesAtivos()`, `quantidadeAnimaisAtivos()`, `quantidadeLotesQuarentenados()`, `quantidadeLeitoesBercario()`, `quantidadePorcasGestantes()`, `quantidadePorcasLactantes()`, `quantidadeInseminacoesPendentes()` |
+
+### 🎯 Campos retornados
+
+geneticas, lotesAtivos, animaisAtivos, quarentena, bercario, gestantes, lactantes, inseminacoesPendentes
+
+## 📌 Relatórios filtrados
+
+| Método  | Rota              | Descrição                                                                     | Query Params                | Resposta de sucesso             | Function                         |                               |
+| ------- | ----------------- | ----------------------------------------------------------------------------- | --------------------------- | ------------------------------- | -------------------------------- | ----------------------------- |
+| **GET** | `/api/relatorios` | Retorna dados de *partos* ou *desmames*, opcionalmente filtrados por período. | `tipo` (obrigatório: partos | desmames), `dataIni`, `dataFim` | `{ ok: true, resultado: [...] }` | `buscaRelatorios($1, $2, $3)` |
+
+### ❌ Possíveis Erros
+
+400 – Tipo inválido
+```
+{ ok: false, erro: "Tipo inválido. Use: partos | desmames" }
+```

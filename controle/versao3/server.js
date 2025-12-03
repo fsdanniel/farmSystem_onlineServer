@@ -1171,21 +1171,13 @@ app.get('/api/relatorios', async (req, res) => {
 
 
 
-
-
-
-
-
 // --- INICIALIZAÇÃO DO SERVIDOR COM AUTO-OPEN ---
-app.listen(3000, () => {
-    console.log("------------------------------------------------");
-    console.log("✅ Backend rodando na porta 3000");
-    console.log("📂 Servindo arquivos da pasta: " + pastaView);
-    console.log("🌐 Acesse em: http://localhost:3000");
-    console.log("------------------------------------------------");
+app.listen(5000, () => {
+    console.log(" Backend rodando na porta 5000");
+   
 
     // Lógica para abrir o navegador automaticamente
-    const url = 'http://localhost:3000';
+    const url = 'http://localhost:5000';
     
     // Identifica o comando correto baseado no Sistema Operacional
     const start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open');
@@ -1193,7 +1185,7 @@ app.listen(3000, () => {
     // Executa o comando
     exec(`${start} ${url}`, (error) => {
         if (error) {
-            console.log("⚠️ Não foi possível abrir o navegador automaticamente. Por favor, abra manualmente.");
+            console.log("Não foi possível abrir o navegador automaticamente. Por favor, abra manualmente.");
         }
     });
 });

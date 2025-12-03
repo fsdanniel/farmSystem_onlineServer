@@ -67,6 +67,7 @@ Quando a função `verificaLogin` não encontra correspondência.
 ```
 { "sucesso": false, "motivo": "credenciais_invalidas" }
 ```
+---
 
 ## Inseminações (`/inseminacoes`)
 
@@ -85,7 +86,7 @@ Gerencia registros de inseminação, permitindo criação, edição, listagem e 
 O endpoint POST funciona como upsert: cria se não houver id, edita se houver.
 
 Os campos de datas devem estar em formato aceito pelo PostgreSQL (YYYY-MM-DD).
-
+---
 ## Insumos (`/insumos`)
 
 Gerencia compras de insumos, estoque atual e histórico.
@@ -104,7 +105,7 @@ Gerencia compras de insumos, estoque atual e histórico.
 Todos os campos do POST são obrigatórios.
 
 Quantidade e custo devem ser valores numéricos válidos.
-
+---
 ## Relatórios (`/api/relatorios`)
 
 Fornece dados agregados e relatórios filtrados por tipo e período.

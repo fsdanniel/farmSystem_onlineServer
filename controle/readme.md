@@ -136,3 +136,67 @@ geneticas, lotesAtivos, animaisAtivos, quarentena, bercario, gestantes, lactante
 ```
 { ok: false, erro: "Tipo inválido. Use: partos | desmames" }
 ```
+
+# 📦 Lotes (`/lotes`)
+
+Gerencia agrupamentos de animais, permitindo cadastro, edição e exclusão de lotes vinculados a uma genética específica.
+
+## Endpoints
+
+| Método | Rota | Descrição | Body / Params | Resposta de Sucesso | Procedure SQL |
+|---|---|---|---|---|---|
+| **GET** | `/lotes` | Lista lotes | Query params: genetica?, status? | `{ sucesso: true, dados: [...] }` | `buscaPaginaLotes($1,$2)` |
+| **POST** | `/lotes` | Cria novo lote | nome, genetica, quantidade, dataCriacao, status | `{ sucesso: true, operacao: "criado" }` | `novoLote(...)` |
+| **PUT** | `/lotes/:id` | Edita lote existente | nome, genetica, quantidade, dataCriacao, status | `{ sucesso: true, operacao: "editado" }` | `editaLote(...)` |
+| **DELETE** | `/lotes/:id` | Remove lote | — | `{ sucesso: true, operacao: "excluido" }` | `excluirLote($1)` |
+
+---
+
+# 👶 Maternidade (`/maternidades`)
+
+Gerencia dados de porcas prenhas, controle de cobertura, previsão de parto e histórico reprodutivo.
+
+## Endpoints
+
+| Método | Rota | Descrição | Body | Resposta de Sucesso | Procedure SQL |
+|---|---|---|---|---|---|
+| **GET** | `/maternidades` | Lista registros maternidade | genetica?, status? | `{ sucesso: true, dados: [...] }` | `buscaMaternidade($1,$2)` |
+| **POST** | `/maternidades` | Cria ou edita registro | brincoFemea, genetica, dataCobertura, dataPartoPrevisto, qtdeLeitoes, status (+ id) | `{ sucesso: true, operacao: "criado/editado" }` | `novoRegistroMaternidade(...)`, `editarRegistroMaternidade(...)` |
+| **DELETE** | `/maternidades/:id` | Exclui registro | — | `{ sucesso: true, operacao: "excluido" }` | `excluirRegistroMaternidade($1)` |
+
+---
+
+# 🚨 Ocorrências (`/ocorrencias`)
+
+Registra eventos relacionados à saúde, mortalidade, manejo e intervenções aplicadas.
+
+## Endpoints principais
+
+| Método | Rota | Descrição | Body | Resposta | Procedure SQL |
+|---|---|---|---|---|---|
+| **GET** | `/ocorrencias` | Lista ocorrências | — | `{ sucesso: true, dados: [...] }` | `buscaOcorrencias(...)` |
+| **POST** | `/ocorrencias` | Cria/edita ocorrência | lote, tipo, prioridade, data, hora, titulo, descricao, quantidadeAnimaisAfetados, medicamentoAplicado, dosagem, responsavel, proximasAcoes, status (+ id) | `{ sucesso: true, operacao: "criado/editado" }` | `novaOcorrencia(...)`, `editarOcorrencia(...)` |
+| **DELETE** | `/ocorrencias/:id` | Remove ocorrência | — | `{ sucesso: true, operacao: "excluido" }` | `excluirOcorrencia($1)` |
+
+---
+
+## Endpoints auxiliares (ocorrências)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| **GET** | `/ocorrencias/lotes` | Retorna lotes existentes |
+| **GET** | `/ocorrencias/qtd-criticas` | Quantidade de ocorrências críticas |
+| **GET** | `/ocorrencias/qtd-pendentes` | Quantidade de ocorrências abertas |
+| **GET** | `/ocorrencias/qtd-resolvidas-hoje` | Ocorrências resolvidas no dia |
+
+---
+
+## 🛠 Observações Gerais
+
+- Todos os endpoints retornam JSON.
+- O uso de procedures centraliza a regra de negócio no PostgreSQL.
+- O POST nas rotas funciona como **upsert** quando permitido (cria ou edita dependendo da presença do campo `id`).
+- Datas devem usar formato compatível com o PostgreSQL: `YYYY-MM-DD`.
+
+---
+

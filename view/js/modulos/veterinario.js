@@ -4,7 +4,7 @@
 
 "use strict";
 
-const API_URL = '';
+const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 // === VARIÁVEIS DE ESTADO DO MÓDULO ===
 let geneticaEditando = null;

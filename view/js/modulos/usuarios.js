@@ -5,7 +5,7 @@
 
 // CONFIGURAÇÃO DA API
 // Ajustado para uso relativo
-const API_URL = '';
+const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 // --- API REAL (Integração com Back-end) ---
 

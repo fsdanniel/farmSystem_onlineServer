@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // CONFIGURAÇÃO DA API
     // Como o server.js agora serve o site, deixamos vazio para usar a mesma origem (host e porta)
     // Se fosse separado, seria 'http://localhost:3000'
-    const API_URL = ''; 
+    const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api'; 
 
     // FUNÇÃO AUXILIAR PARA MOSTRAR ERROS 
     function mostrarErro(mensagem) {

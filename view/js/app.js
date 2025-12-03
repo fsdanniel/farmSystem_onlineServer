@@ -3,7 +3,7 @@
 // CONFIGURAÇÃO GLOBAL DA API
 // Como o site é servido pelo próprio Node.js, a base é a raiz relativa.
 // Outros arquivos .js podem usar essa variável global.
-window.API_URL = ''; 
+window.API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api'; 
 
 // VARIÁVEIS GLOBAIS DE CONTROLE
 let acaoParaConfirmar = { callback: null };

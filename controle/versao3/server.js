@@ -915,12 +915,10 @@ app.get('/api/relatorios', async (req, res) => {
 // ==================================================================
 // --- INICIALIZAÇÃO DO SERVIDOR (Porta 3000 - Estilo Código 2) ---
 // ==================================================================
-app.listen(3000, () => {
-    console.log("------------------------------------------------");
-    console.log("✅ Backend rodando na porta 3000");
-    console.log("📂 Servindo arquivos da pasta: " + pastaView);
-    console.log("🌐 Acesse em: http://localhost:3000");
-    console.log("------------------------------------------------");
+app.listen(5000, () => {
+  
+    console.log(" Acesse em: http://localhost:5000");
+
 
     // Lógica para abrir o navegador automaticamente
     const url = 'http://localhost:3000';

@@ -5,7 +5,7 @@
 
 console.log("🚀 Carregando módulo Insumos v3.1...");
 
-const API_URL = '';
+const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 const TIPOS_INSUMO = [
     { id: 'milho_kg', nome: 'Milho (em grão)', unidade: 'kg' },

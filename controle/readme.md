@@ -200,3 +200,49 @@ Registra eventos relacionados à saúde, mortalidade, manejo e intervenções ap
 
 ---
 
+## Tarefas (`/tarefas`)
+
+Gerencia o controle de tarefas do sistema, permitindo listagem, criação, atualização e exclusão.
+
+### 🔗 Endpoints de tarefas
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **GET** | `/tarefas` | Lista todas as tarefas do sistema. | Não se aplica. | `{ ok: true, dados: [...] }` | `listarTarefas()` |
+| **POST** | `/tarefas` | Insere uma nova tarefa. | Campos definidos no corpo da requisição. | `{ ok: true, dados: {...} }` | `inserirTarefa(req.body)` |
+| **PUT** | `/tarefas/:id` | Atualiza uma tarefa existente. | Campos atualizados da tarefa. | `{ ok: true, dados: {...} }` | `atualizarTarefa(id, req.body)` |
+| **DELETE** | `/tarefas/:id` | Exclui uma tarefa pelo ID. | Não se aplica. | `{ ok: true, dados: {...} }` | `excluirTarefa(id)` |
+
+### 📌 Detalhes importantes
+
+- Todos os retornos seguem o padrão `{ ok: true/false }`.
+- Em caso de erro interno, o backend retorna **500** com `{ ok: false, erro: "mensagem" }`.
+- Procedures utilizadas localizadas em:
+  `modelo/versao3/man/manTarefas.sql`.
+
+---
+
+## Usuários (`/usuarios`)
+
+Gerencia o cadastro de usuários do sistema, incluindo criação, edição, listagem e exclusão.
+
+### 🔗 Endpoints de usuários
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **GET** | `/usuarios` | Lista todos os usuários. | Não se aplica. | `{ ok: true, dados: [...] }` | `buscaUsuarios()` |
+| **POST** | `/usuarios` | Cria um novo usuário. | nickname, nome, tipo, senha. | `{ ok: true, dados: {...} }` | `novoRegistroUsuario(...)` |
+| **PUT** | `/usuarios` | Edita dados de um usuário existente. | old_nickname, new_nickname, new_nome, new_tipo, new_senha. | `{ ok: true, dados: {...} }` | `editarRegistroUsuario(...)` |
+| **DELETE** | `/usuarios/:nickname` | Exclui usuário pelo nickname. | Não se aplica. | `{ ok: true, dados: {...} }` | `excluirRegistroUsuario(nickname)` |
+
+### 📌 Detalhes importantes
+
+- A edição utiliza **old_nickname** para localizar o usuário.
+- A exclusão utiliza o **nickname** direto na URL.
+- Em caso de erro, é retornado status **500**.
+- Procedures utilizadas em:
+  `modelo/versao3/man/manUsuarios.sql`.
+
+---
+
+

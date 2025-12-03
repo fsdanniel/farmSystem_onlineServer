@@ -135,4 +135,6 @@ inseminacoesPendentes
 ### ❌ Possíveis Erros
 
 400 – Tipo inválido
+```
 { ok: false, erro: "Tipo inválido. Use: partos | desmames" }
+```

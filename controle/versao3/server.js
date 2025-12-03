@@ -56,7 +56,7 @@ app.post('/login', async (req, res) => {
         return res.json({ sucesso: true, usuario: usuario, tipo: tipoUsuario });
 
     } catch (err) {
-        console.error("❌ ERRO LOGIN:", err.message);
+        console.error("ERRO LOGIN:", err.message);
         return res.status(500).json({ erro: "Erro no servidor" });
     }
 });
@@ -67,30 +67,30 @@ app.get('/geneticas', async (req, res) => {
         const { rows } = await db.query(`SELECT * FROM listagemFinalPaginaGeneticas();`);
         res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("❌ ERRO GET GENÉTICAS:", err.message);
+        console.error("ERRO GET GENÉTICAS:", err.message);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar genéticas." });
     }
 });
 
 app.post('/geneticas', async (req, res) => {
     const g = req.body;
-    console.log("📥 Recebido POST /geneticas:", g);
+    console.log("Recebido POST /geneticas:", g);
 
     try {
         if (g.id) {
-            console.log("🔄 Editando genética ID:", g.id);
+            console.log("Editando genética ID:", g.id);
             await db.query(`CALL editaRegistroGenetica($1, $2, $3, $4, $5);`, 
                 [g.id, g.nome, g.descricao, g.caracteristicas, g.status]);
             return res.json({ sucesso: true, operacao: "editado" });
         }
         
-        console.log("✨ Criando nova genética...");
+        console.log("Criando nova genética...");
         await db.query(`CALL novoRegistroGenetica($1, $2, $3);`, 
             [g.nome, g.descricao, g.caracteristicas]);
             
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO AO SALVAR GENÉTICA:", err);
+        console.error("ERRO AO SALVAR GENÉTICA:", err);
         console.error("mensagem:", err.message);
         res.status(500).json({ sucesso: false, erro: err.message });
     }
@@ -102,7 +102,7 @@ app.delete('/geneticas/:id', async (req, res) => {
         await db.query(`CALL excluirRegistroGenetica($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE GENÉTICA:", err.message);
+        console.error("ERRO DELETE GENÉTICA:", err.message);
         res.status(500).json({ sucesso: false, erro: err.message });
     }
 });
@@ -117,7 +117,7 @@ app.get('/lotes', async (req, res) => {
         );
         return res.json({ sucesso: true, dados: resultado.rows });
     } catch (err) {
-        console.error("❌ ERRO GET LOTES:", err.message);
+        console.error("ERRO GET LOTES:", err.message);
         return res.status(500).json({ erro: "Erro ao buscar lotes" });
     }
 });
@@ -137,7 +137,7 @@ app.post('/lotes', async (req, res) => {
         );
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO POST LOTE:", err.message);
+        console.error("ERRO POST LOTE:", err.message);
         return res.status(500).json({ erro: err.message });
     }
 });
@@ -159,7 +159,7 @@ app.put('/lotes/:id', async (req, res) => {
         );
         return res.json({ sucesso: true, operacao: "editado" });
     } catch (err) {
-        console.error("❌ ERRO PUT LOTE:", err.message);
+        console.error("ERRO PUT LOTE:", err.message);
         return res.status(500).json({ erro: err.message });
     }
 });
@@ -170,7 +170,7 @@ app.delete('/lotes/:id', async (req, res) => {
         await db.query(`CALL excluirlote($1)`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE LOTE:", err.message);
+        console.error("ERRO DELETE LOTE:", err.message);
         return res.status(500).json({ erro: err.message });
     }
 });
@@ -181,7 +181,7 @@ app.get('/bercario', async (req, res) => {
         const resultado = await db.query(`SELECT * FROM buscaBercario($1, $2);`, [null, null]);
         return res.json({ sucesso: true, dados: resultado.rows });
     } catch (err) { 
-        console.error("❌ ERRO GET BERCARIO:", err.message); 
+        console.error("ERRO GET BERCARIO:", err.message); 
         return res.status(500).json({ erro: "Erro ao buscar berçário" }); 
     }
 });
@@ -198,7 +198,7 @@ app.post('/bercario', async (req, res) => {
             [dados.loteNome, dados.quantidadeLeitoes, dados.dataNascimento, dados.pesoMedio, dados.dataDesmame, dados.status, true]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) { 
-        console.error("❌ ERRO POST BERCARIO:", err.message); 
+        console.error("ERRO POST BERCARIO:", err.message); 
         return res.status(500).json({ erro: err.message }); 
     }
 });
@@ -208,7 +208,7 @@ app.delete('/bercario/:id', async (req, res) => {
         await db.query(`CALL excluirRegistroBercario($1);`, [req.params.id]); 
         return res.json({ sucesso: true, operacao: "excluido" }); 
     } catch (err) { 
-        console.error("❌ ERRO DELETE BERCARIO:", err.message); 
+        console.error("ERRO DELETE BERCARIO:", err.message); 
         return res.status(500).json({ erro: err.message }); 
     }
 });
@@ -224,7 +224,7 @@ app.get('/maternidades', async (req, res) => {
         const resultado = await db.query(`SELECT * FROM buscaMaternidade($1, $2);`, [genetica || null, status || null]);
         return res.json({ sucesso: true, dados: resultado.rows });
     } catch (err) { 
-        console.error("❌ ERRO GET MATERNIDADE:", err.message); 
+        console.error("ERRO GET MATERNIDADE:", err.message); 
         return res.status(500).json({ erro: "Erro ao buscar maternidades" }); 
     }
 });
@@ -241,7 +241,7 @@ app.post('/maternidades', async (req, res) => {
             [d.brincoFemea, d.genetica, d.dataCobertura, d.dataPartoPrevisto, d.qtdeLeitoes, d.status]);
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) { 
-        console.error("❌ ERRO POST MATERNIDADE:", err.message); 
+        console.error("ERRO POST MATERNIDADE:", err.message); 
         res.status(500).json({ erro: err.message }); 
     }
 });
@@ -251,7 +251,7 @@ app.delete('/maternidades/:id', async (req, res) => {
         await db.query(`CALL excluirregistromaternidade($1);`, [req.params.id]); 
         res.json({ sucesso: true, operacao: "excluido" }); 
     } catch (err) { 
-        console.error("❌ ERRO DELETE MATERNIDADE:", err.message); 
+        console.error(" ERRO DELETE MATERNIDADE:", err.message); 
         res.status(500).json({ erro: err.message }); 
     }
 });
@@ -262,7 +262,7 @@ app.get('/inseminacoes', async (req, res) => {
         const { rows } = await db.query(`SELECT * FROM buscaInseminacao(NULL, NULL);`); 
         res.json({ sucesso: true, dados: rows }); 
     } catch (err) { 
-        console.error("❌ ERRO GET INSEMINAÇÕES:", err.message); 
+        console.error(" ERRO GET INSEMINAÇÕES:", err.message); 
         res.status(500).json({ erro: "Erro ao buscar inseminações" }); 
     }
 });
@@ -279,7 +279,7 @@ app.post('/inseminacoes', async (req, res) => {
             [d.brincoFemea, d.geneticaMacho, d.dataInseminacao, d.tecnica, d.resultado, d.dataVerificacao]);
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) { 
-        console.error("❌ ERRO POST INSEMINAÇÕES:", err.message); 
+        console.error(" ERRO POST INSEMINAÇÕES:", err.message); 
         res.status(500).json({ erro: err.message }); 
     }
 });
@@ -289,7 +289,7 @@ app.delete('/inseminacoes/:id', async (req, res) => {
         await db.query(`CALL excluirRegistroInseminacao($1);`, [req.params.id]); 
         res.json({ sucesso: true, operacao: "excluido" }); 
     } catch (err) { 
-        console.error("❌ ERRO DELETE INSEMINAÇÕES:", err.message); 
+        console.error(" ERRO DELETE INSEMINAÇÕES:", err.message); 
         res.status(500).json({ erro: err.message }); 
     }
 });
@@ -301,7 +301,7 @@ app.get('/ocorrencias', async (req, res) => {
         const dados = await db.query(`SELECT * FROM buscaocorrencias($1, $2, $3);`, [null, null, null]);
         res.json({ sucesso: true, dados: dados.rows });
     } catch (err) {
-        console.error("❌ ERRO GET OCORRENCIAS:", err.message);
+        console.error(" ERRO GET OCORRENCIAS:", err.message);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências." });
     }
 });
@@ -320,7 +320,7 @@ app.post('/ocorrencias', async (req, res) => {
              oc.quantidadeAnimaisAfetados, oc.medicamentoAplicado, oc.dosagem, oc.responsavel, oc.proximasAcoes, oc.status]);
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO POST OCORRENCIA:", err.message);
+        console.error(" ERRO POST OCORRENCIA:", err.message);
         res.status(500).json({ sucesso: false, erro: err.message });
     }
 });
@@ -331,7 +331,7 @@ app.delete('/ocorrencias/:id', async (req, res) => {
         await db.query(`CALL excluirocorrencia($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE OCORRENCIA:", err.message);
+        console.error(" ERRO DELETE OCORRENCIA:", err.message);
         res.status(500).json({ sucesso: false, erro: err.message });
     }
 });
@@ -342,7 +342,7 @@ app.get('/ocorrencias/lotes', async (req, res) => {
         const dados = await db.query(`SELECT * FROM listagemlotes();`);
         res.json({ sucesso: true, dados: dados.rows });
     } catch (err) {
-        console.error("❌ ERRO GET OCORRENCIAS/LOTES:", err.message);
+        console.error(" ERRO GET OCORRENCIAS/LOTES:", err.message);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar lotes." });
     }
 });
@@ -352,7 +352,7 @@ app.get('/ocorrencias/qtd-criticas', async (req, res) => {
         const dados = await db.query(`SELECT * FROM quantidadeocorrenciascriticas();`);
         res.json({ sucesso: true, dados: dados.rows });
     } catch (err) {
-        console.error("❌ ERRO GET OCORRENCIAS/CRITICAS:", err.message);
+        console.error(" ERRO GET OCORRENCIAS/CRITICAS:", err.message);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências críticas." });
     }
 });
@@ -362,7 +362,7 @@ app.get('/ocorrencias/qtd-pendentes', async (req, res) => {
         const dados = await db.query(`SELECT * FROM quantidadeocorrenciaspendentes();`);
         res.json({ sucesso: true, dados: dados.rows });
     } catch (err) {
-        console.error("❌ ERRO GET OCORRENCIAS/PENDENTES:", err.message);
+        console.error(" ERRO GET OCORRENCIAS/PENDENTES:", err.message);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências pendentes." });
     }
 });
@@ -372,7 +372,7 @@ app.get('/ocorrencias/qtd-resolvidas-hoje', async (req, res) => {
         const dados = await db.query(`SELECT * FROM quantidadeocorrenciasresolvidashoje();`);
         res.json({ sucesso: true, dados: dados.rows });
     } catch (err) {
-        console.error("❌ ERRO GET OCORRENCIAS/RESOLVIDAS-HOJE:", err.message);
+        console.error(" ERRO GET OCORRENCIAS/RESOLVIDAS-HOJE:", err.message);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar ocorrências resolvidas hoje." });
     }
 });
@@ -386,7 +386,7 @@ app.post('/eventos/inseminacao', async (req, res) => {
         await db.query(`CALL novoEventoCoberturaInseminacao($1, $2, $3, $4);`, [dataCobertura, matrizId, tipo, observacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO EVENTO INSEMINACAO:", err.message);
+        console.error(" ERRO EVENTO INSEMINACAO:", err.message);
         return res.status(500).json({ sucesso: false, erro: err.message });
     }
 });
@@ -398,7 +398,7 @@ app.post('/eventos/parto', async (req, res) => {
         await db.query(`CALL novoEventoParto($1, $2, $3, $4);`, [data, matrizId, quantidadeNascidos, observacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO EVENTO PARTO:", err.message);
+        console.error(" ERRO EVENTO PARTO:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de parto." });
     }
 });
@@ -409,7 +409,7 @@ app.post('/eventos/desmame', async (req, res) => {
         await db.query(`CALL novoEventoDesmame($1, $2, $3, $4);`, [data, loteId, quantidadeDesmamados, observacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO EVENTO DESMAME:", err.message);
+        console.error(" ERRO EVENTO DESMAME:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de desmame." });
     }
 });
@@ -420,7 +420,7 @@ app.post('/eventos/morte-femea', async (req, res) => {
         await db.query(`CALL novoEventoMorteFemea($1, $2, $3, $4);`, [femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO EVENTO MORTE FEMEA:", err.message);
+        console.error(" ERRO EVENTO MORTE FEMEA:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de morte de fêmea." });
     }
 });
@@ -431,7 +431,7 @@ app.post('/eventos/morte-lote', async (req, res) => {
         await db.query(`CALL novoEventoMorteLote($1, $2, $3, $4);`, [loteData, loteIdLote, loteCausaMorte, loteObservacoes]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ ERRO EVENTO MORTE LOTE:", err.message);
+        console.error(" ERRO EVENTO MORTE LOTE:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar evento de morte de lote." });
     }
 });
@@ -443,7 +443,7 @@ app.delete('/eventos/inseminacao/:id', async (req, res) => {
         await db.query(`CALL excluirEventoCoberturaInseminacao($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE EVENTO INSEMINACAO:", err.message);
+        console.error(" ERRO DELETE EVENTO INSEMINACAO:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de inseminação." });
     }
 });
@@ -454,7 +454,7 @@ app.delete('/eventos/parto/:id', async (req, res) => {
         await db.query(`CALL excluirEventoParto($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE EVENTO PARTO:", err.message);
+        console.error(" ERRO DELETE EVENTO PARTO:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de parto." });
     }
 });
@@ -465,7 +465,7 @@ app.delete('/eventos/desmame/:id', async (req, res) => {
         await db.query(`CALL excluirEventoDesmame($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE EVENTO DESMAME:", err.message);
+        console.error(" ERRO DELETE EVENTO DESMAME:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de desmame." });
     }
 });
@@ -476,7 +476,7 @@ app.delete('/eventos/morte-femea/:id', async (req, res) => {
         await db.query(`CALL excluirEventoMorteFemea($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE EVENTO MORTE FEMEA:", err.message);
+        console.error(" ERRO DELETE EVENTO MORTE FEMEA:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de morte de fêmea." });
     }
 });
@@ -487,7 +487,7 @@ app.delete('/eventos/morte-lote/:id', async (req, res) => {
         await db.query(`CALL excluirEventoMorteLote($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ ERRO DELETE EVENTO MORTE LOTE:", err.message);
+        console.error(" ERRO DELETE EVENTO MORTE LOTE:", err.message);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir evento de morte de lote." });
     }
 });
@@ -498,7 +498,7 @@ app.get('/contratos', async (req, res) => {
         const { rows } = await db.query(`SELECT * FROM buscaContratos();`);
         return res.status(200).json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("❌ Erro ao buscar contratos:", err);
+        console.error(" Erro ao buscar contratos:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao buscar contratos." });
     }
 });
@@ -521,7 +521,7 @@ app.post('/contratos', async (req, res) => {
 
         return res.status(201).json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ Erro ao criar contrato:", err);
+        console.error(" Erro ao criar contrato:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar contrato." });
     }
 });
@@ -546,7 +546,7 @@ app.put('/contratos/:id', async (req, res) => {
 
         return res.status(200).json({ sucesso: true, operacao: "editado" });
     } catch (err) {
-        console.error("❌ Erro ao editar contrato:", err);
+        console.error(" Erro ao editar contrato:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao editar contrato." });
     }
 });
@@ -563,7 +563,7 @@ app.delete('/contratos/:id', async (req, res) => {
 
         return res.status(200).json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ Erro ao excluir contrato:", err);
+        console.error(" Erro ao excluir contrato:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir contrato." });
     }
 });
@@ -578,7 +578,7 @@ app.post('/insumos', async (req, res) => {
         );
         res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ Erro ao registrar compra de insumos:", err);
+        console.error(" Erro ao registrar compra de insumos:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao registrar compra de insumos." });
     }
 });
@@ -589,7 +589,7 @@ app.delete('/insumos/:id', async (req, res) => {
         await db.query(`CALL excluirInsumos($1);`, [id]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ Erro ao excluir insumo:", err);
+        console.error(" Erro ao excluir insumo:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao excluir insumo." });
     }
 });
@@ -599,7 +599,7 @@ app.get('/insumos/historico', async (req, res) => {
         const { rows } = await db.query(`SELECT * FROM historicoInsumos();`);
         res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("❌ Erro ao buscar histórico de insumos:", err);
+        console.error(" Erro ao buscar histórico de insumos:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar histórico de insumos." });
     }
 });
@@ -609,7 +609,7 @@ app.get('/insumos/estoque', async (req, res) => {
         const { rows } = await db.query(`SELECT * FROM estoqueInsumos();`);
         res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("❌ Erro ao buscar estoque de insumos:", err);
+        console.error(" Erro ao buscar estoque de insumos:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar estoque de insumos." });
     }
 });
@@ -624,7 +624,7 @@ app.post('/financeiro', async (req, res) => {
         await db.query(`CALL novoRegistroFinanceiro($1, $2, $3, $4, $5);`, [data, descricao, valor, tipo, categoria]);
         return res.json({ sucesso: true, operacao: "criado" });
     } catch (err) {
-        console.error("❌ Erro ao criar registro financeiro:", err);
+        console.error(" Erro ao criar registro financeiro:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao criar registro financeiro." });
     }
 });
@@ -640,7 +640,7 @@ app.put('/financeiro/:id', async (req, res) => {
         await db.query(`CALL editarRegistroFinanceiro($1, $2, $3, $4, $5, $6);`, [id, data, descricao, valor, tipo, categoria]);
         return res.json({ sucesso: true, operacao: "editado" });
     } catch (err) {
-        console.error("❌ Erro ao editar registro financeiro:", err);
+        console.error(" Erro ao editar registro financeiro:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao editar registro financeiro." });
     }
 });
@@ -651,7 +651,7 @@ app.delete('/financeiro/:id', async (req, res) => {
         await db.query(`CALL excluirRegistroFinanceiro($1);`, [id]);
         return res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ Erro ao excluir registro financeiro:", err);
+        console.error(" Erro ao excluir registro financeiro:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao excluir registro financeiro." });
     }
 });
@@ -661,7 +661,7 @@ app.get('/financeiro', async (req, res) => {
         const { rows } = await db.query(`SELECT * FROM buscaFinanceiro();`);
         return res.json({ sucesso: true, dados: rows });
     } catch (err) {
-        console.error("❌ Erro ao buscar registros financeiros:", err);
+        console.error(" Erro ao buscar registros financeiros:", err);
         return res.status(500).json({ sucesso: false, erro: "Erro ao buscar registros financeiros." });
     }
 });
@@ -672,7 +672,7 @@ app.get('/usuarios', async (req, res) => {
         const dados = await db.query(`SELECT * FROM buscausuarios();`);
         res.json({ sucesso: true, dados: dados.rows });
     } catch (err) {
-        console.error("❌ Erro ao listar usuários:", err);
+        console.error(" Erro ao listar usuários:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao buscar usuários." });
     }
 });
@@ -710,7 +710,7 @@ app.post('/usuarios', async (req, res) => {
         res.json({ sucesso: true, operacao: "criado" });
 
     } catch (err) {
-        console.error("❌ Erro ao salvar usuário:", err);
+        console.error(" Erro ao salvar usuário:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao salvar usuário." });
     }
 });
@@ -722,7 +722,7 @@ app.delete('/usuarios/:nickname', async (req, res) => {
         await db.query(`CALL excluirregistrousuario($1);`, [nickname]);
         res.json({ sucesso: true, operacao: "excluido" });
     } catch (err) {
-        console.error("❌ Erro ao excluir usuário:", err);
+        console.error(" Erro ao excluir usuário:", err);
         res.status(500).json({ sucesso: false, erro: "Erro ao excluir usuário." });
     }
 });
@@ -737,7 +737,7 @@ app.get('/tarefas', async (req, res) => {
        const dados = await db.query(`SELECT * FROM buscatarefas();`);
        res.json({ sucesso: true, dados: dados.rows });
    } catch (err) {
-       console.error("❌ Erro ao listar tarefas:", err);
+       console.error(" Erro ao listar tarefas:", err);
        res.status(500).json({ sucesso: false, erro: "Erro ao listar tarefas." });
    }
 });
@@ -751,7 +751,7 @@ app.post('/tarefas', async (req, res) => {
        );
        res.json({ sucesso: true, operacao: "criado" });
    } catch (err) {
-       console.error("❌ Erro ao criar tarefa:", err);
+       console.error(" Erro ao criar tarefa:", err);
        res.status(500).json({ sucesso: false, erro: "Erro ao criar tarefa." });
    }
 });
@@ -766,7 +766,7 @@ app.put('/tarefas/:id', async (req, res) => {
        );
        res.json({ sucesso: true, operacao: "editado" });
    } catch (err) {
-       console.error("❌ Erro ao atualizar tarefa:", err);
+       console.error(" Erro ao atualizar tarefa:", err);
        res.status(500).json({ sucesso: false, erro: "Erro ao atualizar tarefa." });
    }
 });
@@ -777,7 +777,7 @@ app.delete('/tarefas/:id', async (req, res) => {
        await db.query(`CALL excluirregistrotarefa($1);`, [id]);
        res.json({ sucesso: true, operacao: "excluido" });
    } catch (err) {
-       console.error("❌ Erro ao excluir tarefa:", err);
+       console.error(" Erro ao excluir tarefa:", err);
        res.status(500).json({ sucesso: false, erro: "Erro ao excluir tarefa." });
    }
 });
@@ -788,7 +788,7 @@ app.post('/tarefas/concluir/:id', async (req, res) => {
        await db.query(`CALL concluirtarefa($1);`, [id]);
        res.json({ sucesso: true, operacao: "concluida" });
    } catch (err) {
-       console.error("❌ Erro ao concluir tarefa:", err);
+       console.error(" Erro ao concluir tarefa:", err);
        res.status(500).json({ sucesso: false, erro: "Erro ao concluir tarefa." });
    }
 });
@@ -802,7 +802,7 @@ app.get('/tarefas/minhas/:usuario', async (req, res) => {
        );
        res.json({ sucesso: true, dados: dados.rows });
    } catch (err) {
-       console.error("❌ Erro ao buscar minhas tarefas:", err);
+       console.error(" Erro ao buscar minhas tarefas:", err);
        res.status(500).json({ sucesso: false, erro: "Erro ao buscar tarefas do usuário." });
    }
 });

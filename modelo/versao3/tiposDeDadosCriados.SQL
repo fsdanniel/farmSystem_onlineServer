@@ -21,7 +21,7 @@ CREATE TYPE TYPE_TAREFASTATUS AS ENUM ('pendente', 'concluida', 'em andamento');
 CREATE TYPE TYPE_TAREFAPRIORIDADE AS ENUM ('baixa', 'media', 'alta', 'critica');
 CREATE TYPE TYPE_STATUSCONTRATO AS ENUM ('vencido', 'vigente', 'futuro');
 CREATE TYPE TYPE_FINANCEIROTIPO AS ENUM ('saida', 'entrada');
-CREATE TYPE TYPE_FINANCEIROCATEGORIA AS ENUM ('alimentação', 'compra de insumos', 
+CREATE TYPE TYPE_FINANCEIROCATEGORIA AS ENUM ('alimentacao', 'compra de insumos', 
 'venda de animais', 'manutencao', 'outros');
 CREATE TYPE TYPE_LOTESTATUS AS ENUM ('ativo', 'inativo', 'quarentenado');
 CREATE TYPE TYPE_OCORRTIPO AS ENUM ('sanitaria', 'alimentacao', 'medicamento',

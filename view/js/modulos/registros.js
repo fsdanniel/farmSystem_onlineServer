@@ -5,7 +5,7 @@
 "use strict";
 
 // CONFIGURAÇÃO DA API
-const API_URL_REGISTROS = '';
+const API_URL_REGISTROS = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 /**
  * Inicializa a lógica de abas (formulários dinâmicos) e configura os envios.

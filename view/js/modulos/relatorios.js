@@ -6,7 +6,7 @@
 
 // CONFIGURAÇÃO DA API
 // Ajustado para uso relativo (mesmo domínio do servidor web)
-const API_URL_RELATORIOS = '';
+const API_URL_RELATORIOS = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
 /**
  * Inicializa a lógica do Gerador de Relatórios (botão Filtrar).

@@ -4,8 +4,14 @@
 
 "use strict";
 
+//<<<<<<< HEAD
 // CONFIGURAÇÃO DA API
-const API_URL = '';
+//const API_URL = '';
+//=======
+console.log("🚀 Carregando módulo Insumos v3.1...");
+
+const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
+//>>>>>>> 2fb8d710fa4ece12b9f67e2c4b251bc9decbe47e
 
 // === CONFIGURAÇÃO (Front-end) ===
 const TIPOS_INSUMO = [

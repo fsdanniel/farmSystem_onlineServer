@@ -200,3 +200,146 @@ Registra eventos relacionados à saúde, mortalidade, manejo e intervenções ap
 
 ---
 
+## Tarefas (`/tarefas`)
+
+Gerencia o controle de tarefas do sistema, permitindo listagem, criação, atualização e exclusão.
+
+### 🔗 Endpoints de tarefas
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **GET** | `/tarefas` | Lista todas as tarefas do sistema. | Não se aplica. | `{ ok: true, dados: [...] }` | `listarTarefas()` |
+| **POST** | `/tarefas` | Insere uma nova tarefa. | Campos definidos no corpo da requisição. | `{ ok: true, dados: {...} }` | `inserirTarefa(req.body)` |
+| **PUT** | `/tarefas/:id` | Atualiza uma tarefa existente. | Campos atualizados da tarefa. | `{ ok: true, dados: {...} }` | `atualizarTarefa(id, req.body)` |
+| **DELETE** | `/tarefas/:id` | Exclui uma tarefa pelo ID. | Não se aplica. | `{ ok: true, dados: {...} }` | `excluirTarefa(id)` |
+
+### 📌 Detalhes importantes
+
+- Todos os retornos seguem o padrão `{ ok: true/false }`.
+- Em caso de erro interno, o backend retorna **500** com `{ ok: false, erro: "mensagem" }`.
+- Procedures utilizadas localizadas em:
+  `modelo/versao3/man/manTarefas.sql`.
+
+---
+
+## Usuários (`/usuarios`)
+
+Gerencia o cadastro de usuários do sistema, incluindo criação, edição, listagem e exclusão.
+
+### 🔗 Endpoints de usuários
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **GET** | `/usuarios` | Lista todos os usuários. | Não se aplica. | `{ ok: true, dados: [...] }` | `buscaUsuarios()` |
+| **POST** | `/usuarios` | Cria um novo usuário. | nickname, nome, tipo, senha. | `{ ok: true, dados: {...} }` | `novoRegistroUsuario(...)` |
+| **PUT** | `/usuarios` | Edita dados de um usuário existente. | old_nickname, new_nickname, new_nome, new_tipo, new_senha. | `{ ok: true, dados: {...} }` | `editarRegistroUsuario(...)` |
+| **DELETE** | `/usuarios/:nickname` | Exclui usuário pelo nickname. | Não se aplica. | `{ ok: true, dados: {...} }` | `excluirRegistroUsuario(nickname)` |
+
+### 📌 Detalhes importantes
+
+- A edição utiliza **old_nickname** para localizar o usuário.
+- A exclusão utiliza o **nickname** direto na URL.
+- Em caso de erro, é retornado status **500**.
+- Procedures utilizadas em:
+  `modelo/versao3/man/manUsuarios.sql`.
+
+---
+
+## Eventos (`/eventos`)
+
+Gerencia eventos reprodutivos e de mortalidade na granja, incluindo coberturas, partos, desmames e óbitos.
+
+### 🔗 Endpoints de eventos
+
+#### 📍 Cobertura/Inseminação
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **POST** | `/eventos/cobertura` | Registra novo evento de cobertura/inseminação. | dataCobertura, matrizId, tipo, observacoes. | Objeto do evento criado. | `novoEventoCoberturaInseminacao(...)` |
+| **DELETE** | `/eventos/cobertura/:id` | Exclui evento de cobertura pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirEventoCoberturaInseminacao($1)` |
+
+#### 📍 Parto
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **POST** | `/eventos/parto` | Registra novo evento de parto. | data, matrizId, quantidadeNascidos, observacoes. | Objeto do evento criado. | `novoEventoParto(...)` |
+| **DELETE** | `/eventos/parto/:id` | Exclui evento de parto pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirEventoParto($1)` |
+
+#### 📍 Desmame
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **POST** | `/eventos/desmame` | Registra novo evento de desmame. | data, loteId, quantidadeDesmamados, observacoes. | Objeto do evento criado. | `novoEventoDesmame(...)` |
+| **DELETE** | `/eventos/desmame/:id` | Exclui evento de desmame pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirEventoDesmame($1)` |
+
+#### 📍 Morte de Lote
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **POST** | `/eventos/morte-lote` | Registra morte em lote. | loteData, loteIdLote, loteCausaMorte, loteObservacoes. | Objeto do evento criado. | `novoEventoMorteLote(...)` |
+| **DELETE** | `/eventos/morte-lote/:id` | Exclui evento de morte de lote pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirEventoMorteLote($1)` |
+
+#### 📍 Morte de Fêmea
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **POST** | `/eventos/morte-femea` | Registra morte de matriz/fêmea. | femeaData, femeaIdMatriz, femeaCausaMorte, femeaObservacoes. | Objeto do evento criado. | `novoEventoMorteFemea(...)` |
+| **DELETE** | `/eventos/morte-femea/:id` | Exclui evento de morte de fêmea pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirEventoMorteFemea($1)` |
+
+### 📌 Detalhes importantes
+
+- Todos os eventos devem incluir data no formato `YYYY-MM-DD`.
+- Os IDs de matriz e lote devem corresponder a registros existentes.
+- Procedures utilizadas em: `modelo/versao3/man/manEventos.sql`.
+
+---
+
+## Financeiro (`/financeiro`)
+
+Gerencia registros financeiros de receitas e despesas da granja.
+
+### 🔗 Endpoints de financeiro
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **GET** | `/financeiro` | Lista todos os registros financeiros. | Não se aplica. | Lista de objetos financeiros. | `buscaFinanceiro()` |
+| **POST** | `/financeiro` | Cria novo registro financeiro. | data, descricao, valor, tipo, categoria. | Objeto do registro criado. | `novoRegistroFinanceiro(...)` |
+| **PUT** | `/financeiro/:id` | Edita registro financeiro existente. | data, descricao, valor, tipo, categoria. | Objeto do registro editado. | `editarRegistroFinanceiro(...)` |
+| **DELETE** | `/financeiro/:id` | Exclui registro financeiro pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirRegistroFinanceiro($1)` |
+
+### 📌 Detalhes importantes
+
+- **tipo** deve ser "receita" ou "despesa".
+- **categoria** classifica a natureza do registro (exemplo: venda, compra, manutenção).
+- **valor** deve ser numérico positivo.
+- Procedures utilizadas em: `modelo/versao3/man/manFinanceiro.sql`.
+
+---
+
+## Genéticas (`/geneticas`)
+
+Gerencia informações sobre linhagens genéticas de animais utilizadas na granja.
+
+### 🔗 Endpoints de genéticas
+
+| Método | Rota | Descrição | Body | Resposta de sucesso | Stored procedure/Function |
+|--------|-------|------------|-------|------------------------|------------------------------|
+| **GET** | `/geneticas` | Lista todas as genéticas cadastradas. | Não se aplica. | Lista de objetos de genéticas. | `buscaGenetica("")` |
+| **POST** | `/geneticas` | Cria ou edita genética (upsert). Com `id` edita, sem `id` cria. | **Sem id:** nome, descricao, caracteristicas. <br> **Com id:** nome, descricao, caracteristicas, status, id. | Objeto da genética criada/editada. | `novoRegistroGenetica(...)`, `editaRegistroGenetica(...)` |
+| **DELETE** | `/geneticas/:id` | Exclui genética pelo ID. | Não se aplica. | Confirmação de exclusão. | `excluirRegistroGenetica($1)` |
+
+### 🔗 Endpoints auxiliares
+
+| Método | Rota | Descrição | Resposta | Function |
+|--------|------|-----------|----------|----------|
+| **GET** | `/geneticas/nomes` | Retorna apenas nomes das genéticas. | Lista de nomes. | `listaNomesGeneticas()` |
+| **GET** | `/geneticas/paginadas` | Retorna listagem paginada de genéticas. | Lista paginada. | `listagemFinalPaginaGeneticas()` |
+
+### 📌 Detalhes importantes
+
+- **POST** funciona como upsert: presença de `id` determina edição.
+- **caracteristicas** armazena atributos específicos da linhagem.
+- **status** indica se a genética está ativa ou inativa.
+- Procedures utilizadas em: `modelo/versao3/man/manGenetica.sql`.
+
+---

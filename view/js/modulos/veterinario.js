@@ -1,9 +1,10 @@
 // Arquivo: js/modulos/veterinario.js
 // Módulo principal que gerencia as seções do Veterinário e Produção
-// VERSÃO 3.8 (Correção Definitiva: Mapeamento de idgen)
+// VERSÃO FINAL (Mapeamento de idgen corrigido)
 
 "use strict";
 
+// CONFIGURAÇÃO DA API
 const API_URL = '';
 
 // === VARIÁVEIS DE ESTADO DO MÓDULO ===
@@ -27,7 +28,7 @@ async function fetchGeneticas() {
         if (!json.dados || json.dados.length === 0) return [];
 
         return json.dados.map(g => ({
-            // CORREÇÃO CRÍTICA: Mapeia 'idgen' (do banco) para 'id' (do front)
+            // CORREÇÃO: Lendo a coluna 'idgen' que o banco retorna
             id: parseInt(g.idgen || g.id || 0), 
             nome: g.nome,
             descricao: g.descricao,
@@ -50,6 +51,10 @@ async function saveGenetica(dados) {
     
     // Tratamento de erro vindo do servidor
     if (!json.sucesso) {
+        // Se for erro de duplicidade, melhoramos a mensagem
+        if (json.erro && json.erro.includes('duplicate key')) {
+            throw new Error(`A genética "${dados.nome}" já existe.`);
+        }
         throw new Error(json.erro || "Erro desconhecido ao salvar genética.");
     }
     return json;
@@ -183,7 +188,6 @@ async function fetchBercarios() {
             id: parseInt(b.id),
             loteId: null, 
             loteNome: b.lotenome,
-            // Correção para ler quantidade corretamente e evitar NaN
             quantidadeLeitoes: parseInt(b.quantidadeleitoes || b.qtdeleitoes || 0),
             dataNascimento: b.datanascimento ? b.datanascimento.split('T')[0] : '',
             pesoMedio: parseFloat(b.pesomedio || 0),
@@ -605,7 +609,7 @@ async function excluirGenetica(id) {
             await atualizarRelatorios();
             if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Excluído!', 'Genética excluída com sucesso.');
         } catch (e) {
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message || 'Não foi possível excluir.');
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message);
         }
     };
     if (typeof mostrarConfirmacao === 'function') {

@@ -120,17 +120,26 @@
     font-weight: 600;
 }
 
-/* Filtros */
+/* Filtros (Atualizado com alinhamento flex-end) */
 .filters {
     display: flex;
-    gap: 20px;
+    gap: 15px;
+    /* Ajustado para 15px */
     margin-bottom: 20px;
     padding: 10px 20px;
     background-color: var(--cor-fundo-card);
     border-radius: 8px;
     border: 1px solid var(--cor-borda);
     flex-wrap: wrap;
-    /* Permite que os filtros quebrem linha */
+    align-items: flex-end;
+    /* Garante que o botão alinhe com a base dos inputs */
+}
+
+/* Regra nova para os inputs dentro dos filtros ocuparem o espaço correto */
+.filters .grupo-formulario {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 200px;
 }
 
 /* Tabelas */
@@ -164,7 +173,26 @@
     border-bottom: 1px solid #f0f2f5;
     color: var(--cor-texto-claro);
     font-size: 14px;
+    vertical-align: middle; /* Garante alinhamento vertical no centro */
 }
+
+/* --- ALTERAÇÃO SOLICITADA: Botões Empilhados --- */
+/* Foca especificamente na última célula (Ações) */
+.data-table td:last-child {
+    display: flex;
+    flex-direction: column; /* Empilha um abaixo do outro */
+    gap: 5px; /* Espaço entre os botões */
+    align-items: stretch; /* Estica os botões para terem a mesma largura */
+    justify-content: center;
+    min-width: 100px; /* Garante largura mínima para não quebrar */
+}
+
+/* Remove margens laterais antigas e força largura total no flex */
+.data-table td button {
+    margin: 0;
+    width: 100%;
+}
+/* --------------------------------------------- */
 
 .data-table tbody tr:last-child td {
     border-bottom: none;
@@ -616,6 +644,16 @@
     margin-bottom: 20px;
 }
 
+/* Estilo para Botão Inline (Novo) */
+.btn-busca-inline {
+    width: auto !important;
+    /* Sobrescreve largura 100% */
+    padding: 12px 30px;
+    flex: 0 0 auto;
+    height: 48px;
+    /* Altura padrão para alinhar com inputs */
+}
+
 /* Responsividade (Layout) */
 @media (max-width: 900px) {
 
@@ -679,6 +717,13 @@
     .filters {
         flex-direction: column;
         gap: 10px;
+        align-items: stretch;
+        /* Reseta alinhamento no mobile */
+    }
+
+    .btn-busca-inline {
+        width: 100% !important;
+        /* Botão volta a ser full width no mobile */
     }
 
     .section-header {

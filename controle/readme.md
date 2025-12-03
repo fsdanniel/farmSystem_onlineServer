@@ -117,14 +117,7 @@ Fornece dados agregados e relatórios filtrados por tipo e período.
 
 ### 🎯 Campos retornados
 
-geneticas
-lotesAtivos
-animaisAtivos
-quarentena
-bercario
-gestantes
-lactantes
-inseminacoesPendentes
+geneticas, lotesAtivos, animaisAtivos, quarentena, bercario, gestantes, lactantes, inseminacoesPendentes
 
 ## 📌 Relatórios filtrados
 

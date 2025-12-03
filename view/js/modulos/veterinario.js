@@ -1,10 +1,9 @@
 // Arquivo: js/modulos/veterinario.js
 // Módulo principal que gerencia as seções do Veterinário e Produção
-// VERSÃO FINAL (Mapeamento de idgen corrigido)
+// VERSÃO FINAL (Mapeamentos idgen, idl e Ocorrências corrigidos)
 
 "use strict";
 
-// CONFIGURAÇÃO DA API
 const API_URL = '';
 
 // === VARIÁVEIS DE ESTADO DO MÓDULO ===
@@ -28,7 +27,7 @@ async function fetchGeneticas() {
         if (!json.dados || json.dados.length === 0) return [];
 
         return json.dados.map(g => ({
-            // CORREÇÃO: Lendo a coluna 'idgen' que o banco retorna
+            // CORREÇÃO: Mapeia 'idgen' (do banco) para 'id' (do front)
             id: parseInt(g.idgen || g.id || 0), 
             nome: g.nome,
             descricao: g.descricao,
@@ -49,9 +48,7 @@ async function saveGenetica(dados) {
     });
     const json = await response.json();
     
-    // Tratamento de erro vindo do servidor
     if (!json.sucesso) {
-        // Se for erro de duplicidade, melhoramos a mensagem
         if (json.erro && json.erro.includes('duplicate key')) {
             throw new Error(`A genética "${dados.nome}" já existe.`);
         }
@@ -72,10 +69,15 @@ async function fetchLotes() {
     try {
         const response = await fetch(`${API_URL}/lotes`);
         const json = await response.json();
-        return (json.dados || []).map(l => ({
-            id: parseInt(l.id),
+        
+        if (!json.dados || json.dados.length === 0) return [];
+
+        return json.dados.map(l => ({
+            // CORREÇÃO: Mapeia 'idl' (do banco) para 'id' (do front)
+            id: parseInt(l.idl || l.id || 0),
             nome: l.nome,
             geneticaId: parseInt(l.genetica), 
+            // Se o banco não retornar o nome da genética, o renderizador fará o cruzamento.
             geneticaNome: l.geneticanome || l.genetica, 
             quantidadeAnimais: parseInt(l.quantidade || 0),
             dataCriacao: l.datacriacao ? l.datacriacao.split('T')[0] : '',
@@ -105,7 +107,13 @@ async function saveLote(dados) {
         body: JSON.stringify(body)
     });
     const json = await response.json();
-    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar lote.");
+    
+    if (!json.sucesso) {
+        if (json.erro && json.erro.includes('foreign key constraint')) {
+            throw new Error("Erro: A genética selecionada é inválida ou não existe.");
+        }
+        throw new Error(json.erro || "Erro ao salvar lote.");
+    }
     return json;
 }
 
@@ -121,22 +129,38 @@ async function fetchOcorrencias() {
     try {
         const response = await fetch(`${API_URL}/ocorrencias`);
         const json = await response.json();
-        return (json.dados || []).map(o => ({
-            id: parseInt(o.id),
-            loteId: o.loteid ? parseInt(o.loteid) : null, 
-            loteNome: o.lote || o.lotenome,
-            tipo: o.tipo,
-            prioridade: o.prioridade,
-            dataHora: o.data || o.datahora, 
-            titulo: o.titulo,
-            descricao: o.descricao,
-            animaisAfetados: parseInt(o.quantidadeanimaisafetados || o.animaisafetados || 0),
-            medicamentoAplicado: o.medicamentoaplicado,
-            dosagem: o.dosagem,
-            veterinarioResponsavel: o.responsavel || o.veterinarioresponsavel,
-            proximasAcoes: o.proximasacoes,
-            status: o.status
-        }));
+
+        if (!json.dados || json.dados.length === 0) return [];
+
+        return json.dados.map(o => {
+            // Tratamento de Data e Hora (separados no banco, juntos no front)
+            let dataHoraFormatada = '';
+            if (o.data) {
+                const dataParte = o.data.split('T')[0]; // YYYY-MM-DD
+                const horaParte = o.hora || '00:00';
+                dataHoraFormatada = `${dataParte}T${horaParte}`;
+            }
+
+            return {
+                // Mapeamento baseado no retorno do banco (id, lote, tipo...)
+                id: parseInt(o.id || 0),
+                loteId: null, // O banco retorna o nome no campo 'lote'
+                loteNome: o.lote || 'Desconhecido',
+                tipo: o.tipo,
+                prioridade: o.prioridade,
+                dataHora: dataHoraFormatada,
+                titulo: o.titulo,
+                status: o.status,
+                veterinarioResponsavel: o.responsavel,
+
+                // Campos que o banco NÃO está retornando (fallback para vazio)
+                descricao: o.descricao || '',
+                animaisAfetados: parseInt(o.quantidadeanimaisafetados || 0),
+                medicamentoAplicado: o.medicamentoaplicado || '',
+                dosagem: o.dosagem || '',
+                proximasAcoes: o.proximasacoes || ''
+            };
+        });
     } catch (e) {
         console.error("Erro ocorrencias:", e);
         return [];
@@ -185,7 +209,7 @@ async function fetchBercarios() {
         const response = await fetch(`${API_URL}/bercario`);
         const json = await response.json();
         return (json.dados || []).map(b => ({
-            id: parseInt(b.id),
+            id: parseInt(b.idbercario || b.id || 0),
             loteId: null, 
             loteNome: b.lotenome,
             quantidadeLeitoes: parseInt(b.quantidadeleitoes || b.qtdeleitoes || 0),
@@ -231,7 +255,7 @@ async function fetchMaternidades() {
         const response = await fetch(`${API_URL}/maternidades`);
         const json = await response.json();
         return (json.dados || []).map(m => ({
-            id: parseInt(m.id),
+            id: parseInt(m.idmaternidade || m.id || 0),
             brincoPorca: m.brincofemea || m.brincoPorca,
             geneticaId: parseInt(m.genetica), 
             geneticaNome: m.geneticanome || m.genetica,
@@ -277,7 +301,7 @@ async function fetchInseminacoes() {
         const response = await fetch(`${API_URL}/inseminacoes`);
         const json = await response.json();
         return (json.dados || []).map(i => ({
-            id: parseInt(i.id),
+            id: parseInt(i.idinseminacao || i.id || 0),
             brincoFemea: i.brincofemea,
             geneticaMachoId: parseInt(i.geneticamacho),
             geneticaMachoNome: i.geneticamachonome || i.geneticamacho,
@@ -385,6 +409,7 @@ async function carregarLotes() {
     data.forEach(lote => {
         let nomeGen = lote.geneticaNome;
         if(!nomeGen && lote.geneticaId) {
+            // Com idgen mapeado para id, o find funcionará
             const g = geneticas.find(x => x.id == lote.geneticaId);
             nomeGen = g ? g.nome : 'ID: ' + lote.geneticaId;
         }
@@ -585,7 +610,6 @@ async function editarGenetica(id) {
     if (!id || isNaN(id)) return;
 
     const geneticas = await fetchGeneticas();
-    // Comparação não estrita (==) para achar "5" e 5
     geneticaEditando = geneticas.find(g => g.id == id);
     
     if (geneticaEditando) {
@@ -609,7 +633,7 @@ async function excluirGenetica(id) {
             await atualizarRelatorios();
             if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Excluído!', 'Genética excluída com sucesso.');
         } catch (e) {
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message);
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message || 'Não foi possível excluir.');
         }
     };
     if (typeof mostrarConfirmacao === 'function') {
@@ -697,12 +721,13 @@ async function editarOcorrencia(id) {
         }
 
         document.getElementById('titulo-ocorrencia').value = ocorrenciaEditando.titulo;
-        document.getElementById('descricao-ocorrencia').value = ocorrenciaEditando.descricao;
-        document.getElementById('animais-afetados').value = ocorrenciaEditando.animaisAfetados;
-        document.getElementById('medicamento-aplicado').value = ocorrenciaEditando.medicamentoAplicado;
-        document.getElementById('dosagem').value = ocorrenciaEditando.dosagem;
+        // Preenchendo com vazio caso venha do backend como vazio
+        document.getElementById('descricao-ocorrencia').value = ocorrenciaEditando.descricao || '';
+        document.getElementById('animais-afetados').value = ocorrenciaEditando.animaisAfetados || 0;
+        document.getElementById('medicamento-aplicado').value = ocorrenciaEditando.medicamentoAplicado || '';
+        document.getElementById('dosagem').value = ocorrenciaEditando.dosagem || '';
         document.getElementById('veterinario-responsavel').value = ocorrenciaEditando.veterinarioResponsavel;
-        document.getElementById('proximas-acoes').value = ocorrenciaEditando.proximasAcoes;
+        document.getElementById('proximas-acoes').value = ocorrenciaEditando.proximasAcoes || '';
         document.getElementById('status-ocorrencia').value = ocorrenciaEditando.status;
         document.getElementById('modal-ocorrencia').style.display = 'block';
     }
@@ -882,13 +907,10 @@ function atualizarSelectGeneticas(data) {
         document.getElementById('genetica-macho'), 
         document.getElementById('filtro-maternidade-genetica') 
     ];
-    // Filtra apenas ativas para novos cadastros? 
-    // Por simplicidade, mostramos todas ou filtramos 'ativa'
     const optionsHtml = data.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
     
     selects.forEach((select) => {
         if (!select) return;
-        // Preserva a opção padrão
         const firstOption = select.options[0] ? select.options[0].outerHTML : '<option value="">Selecione</option>';
         select.innerHTML = firstOption + optionsHtml;
     });
@@ -1013,7 +1035,6 @@ function configurarFormularios() {
         e.preventDefault();
         const formData = new FormData(this);
         
-        // Pega o nome do lote para enviar ao backend (que espera nome na procedure antiga)
         const loteSelect = document.getElementById('lote-ocorrencia');
         const loteNome = loteSelect.options[loteSelect.selectedIndex].text.split(' (')[0]; 
 

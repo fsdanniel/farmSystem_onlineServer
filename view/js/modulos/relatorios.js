@@ -6,7 +6,7 @@
 
 // CONFIGURAÇÃO DA API
 // Ajustado para uso relativo (mesmo domínio do servidor web)
-const API_URL_RELATORIOS = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
+const API_URL_RELATORIOS = '';
 
 /**
  * Inicializa a lógica do Gerador de Relatórios (botão Filtrar).
@@ -47,8 +47,9 @@ function inicializarModuloRelatorios() {
                     dadosFormatados = json.dados.map(item => ({
                         // Tenta pegar data de parto ou cobertura. Postgres retorna minúsculo.
                         data: item.datapartoprevisto || item.dataPartoPrevisao || item.datacobertura || item.dataCobertura,
-                        lote: `Matriz ${item.brincofemea || item.brincoPorca || 'S/N'}`,
-                        qtd: item.qtdeleitoes || item.quantidadeLeitoes || 0,
+                        lote: `Matriz ${item.brincofemea || item.brincoPorca || item.femea || 'S/N'}`,
+                        // CORREÇÃO: Múltiplas tentativas para quantidade
+                        qtd: item.qtdeleitoes || item.quantidadeleitoes || item.quantidade || 0,
                         obs: item.status // Ex: "lactante", "gestante"
                     }));
                 }
@@ -61,8 +62,9 @@ function inicializarModuloRelatorios() {
                 if (json.sucesso && json.dados) {
                     dadosFormatados = json.dados.map(item => ({
                         data: item.datadesmame || item.dataDesmame || item.datanascimento || item.dataNascimento,
-                        lote: item.lotenome || item.loteNome,
-                        qtd: item.quantidadeleitoes || item.quantidadeLeitoes,
+                        lote: item.lotenome || item.loteNome || item.lote,
+                        // CORREÇÃO: Tenta ler 'quantidadeleitoes', 'qtdeleitoes' ou 'quantidade'
+                        qtd: item.quantidadeleitoes || item.qtdeleitoes || item.quantidade || 0,
                         // Formata a observação
                         obs: (item.pesomedio || item.pesoMedio) ? `Peso Médio: ${item.pesomedio || item.pesoMedio}kg` : item.status
                     }));

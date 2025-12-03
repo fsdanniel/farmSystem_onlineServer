@@ -1,8 +1,9 @@
 // Arquivo: js/modulos/veterinario.js
 // Módulo principal que gerencia as seções do Veterinário e Produção
-// VERSÃO FINAL (Mapeamentos idgen, idl e Ocorrências corrigidos)
+// VERSÃO: Com Busca Funcional e Refatoração de Renderização
 
 "use strict";
+
 
 const API_URL = 'http://undeluded-filmier-eusebio.ngrok-free.dev/api';
 
@@ -27,7 +28,6 @@ async function fetchGeneticas() {
         if (!json.dados || json.dados.length === 0) return [];
 
         return json.dados.map(g => ({
-            // CORREÇÃO: Mapeia 'idgen' (do banco) para 'id' (do front)
             id: parseInt(g.idgen || g.id || 0), 
             nome: g.nome,
             descricao: g.descricao,
@@ -47,13 +47,7 @@ async function saveGenetica(dados) {
         body: JSON.stringify(dados)
     });
     const json = await response.json();
-    
-    if (!json.sucesso) {
-        if (json.erro && json.erro.includes('duplicate key')) {
-            throw new Error(`A genética "${dados.nome}" já existe.`);
-        }
-        throw new Error(json.erro || "Erro desconhecido ao salvar genética.");
-    }
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar.");
     return json;
 }
 
@@ -73,18 +67,15 @@ async function fetchLotes() {
         if (!json.dados || json.dados.length === 0) return [];
 
         return json.dados.map(l => ({
-            // CORREÇÃO: Mapeia 'idl' (do banco) para 'id' (do front)
             id: parseInt(l.idl || l.id || 0),
             nome: l.nome,
             geneticaId: parseInt(l.genetica), 
-            // Se o banco não retornar o nome da genética, o renderizador fará o cruzamento.
             geneticaNome: l.geneticanome || l.genetica, 
             quantidadeAnimais: parseInt(l.quantidade || 0),
             dataCriacao: l.datacriacao ? l.datacriacao.split('T')[0] : '',
             status: l.status
         }));
     } catch (e) {
-        console.error("Erro lotes:", e);
         return [];
     }
 }
@@ -107,13 +98,7 @@ async function saveLote(dados) {
         body: JSON.stringify(body)
     });
     const json = await response.json();
-    
-    if (!json.sucesso) {
-        if (json.erro && json.erro.includes('foreign key constraint')) {
-            throw new Error("Erro: A genética selecionada é inválida ou não existe.");
-        }
-        throw new Error(json.erro || "Erro ao salvar lote.");
-    }
+    if (!json.sucesso) throw new Error(json.erro || "Erro ao salvar lote.");
     return json;
 }
 
@@ -133,27 +118,24 @@ async function fetchOcorrencias() {
         if (!json.dados || json.dados.length === 0) return [];
 
         return json.dados.map(o => {
-            // Tratamento de Data e Hora (separados no banco, juntos no front)
             let dataHoraFormatada = '';
             if (o.data) {
-                const dataParte = o.data.split('T')[0]; // YYYY-MM-DD
+                const dataParte = o.data.split('T')[0];
                 const horaParte = o.hora || '00:00';
                 dataHoraFormatada = `${dataParte}T${horaParte}`;
             }
 
             return {
-                // Mapeamento baseado no retorno do banco (id, lote, tipo...)
                 id: parseInt(o.id || 0),
-                loteId: null, // O banco retorna o nome no campo 'lote'
+                loteId: null, 
                 loteNome: o.lote || 'Desconhecido',
                 tipo: o.tipo,
                 prioridade: o.prioridade,
                 dataHora: dataHoraFormatada,
                 titulo: o.titulo,
                 status: o.status,
-                veterinarioResponsavel: o.responsavel,
-
-                // Campos que o banco NÃO está retornando (fallback para vazio)
+                // Correção do BUG "undefined": Tenta pegar de 'responsavel' ou 'veterinario'
+                veterinarioResponsavel: o.responsavel || o.veterinario || 'N/D',
                 descricao: o.descricao || '',
                 animaisAfetados: parseInt(o.quantidadeanimaisafetados || 0),
                 medicamentoAplicado: o.medicamentoaplicado || '',
@@ -162,7 +144,6 @@ async function fetchOcorrencias() {
             };
         });
     } catch (e) {
-        console.error("Erro ocorrencias:", e);
         return [];
     }
 }
@@ -358,22 +339,22 @@ async function atualizarNomeVeterinarioInterface() {
     if (campoVeterinario && nomeVeterinario) campoVeterinario.value = nomeVeterinario;
 }
 
-// === FUNÇÕES DE RENDERIZAÇÃO (Grid / Tabela) ===
+// =================================================================
+// === FUNÇÕES DE RENDERIZAÇÃO (SEPARADAS DO FETCH) ===
+// =================================================================
 
-async function carregarGeneticas() {
+// 1. GENÉTICAS
+function renderizarTabelaGeneticas(lista) {
     const tbody = document.getElementById('tabela-geneticas');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
-    
-    const data = await fetchGeneticas();
     tbody.innerHTML = '';
     
-    if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma genética encontrada.</td></tr>';
+    if(lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma genética encontrada com os filtros atuais.</td></tr>';
         return;
     }
     
-    data.forEach(genetica => {
+    lista.forEach(genetica => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${genetica.id}</td>
@@ -388,29 +369,25 @@ async function carregarGeneticas() {
         `;
         tbody.appendChild(row);
     });
-    atualizarSelectGeneticas(data); 
+    // Atualiza os selects globais (apenas se for carga completa, mas aqui atualizamos sempre para garantir consistencia)
+    atualizarSelectGeneticas(lista); 
 }
 
-async function carregarLotes() {
+// 2. LOTES
+function renderizarTabelaLotes(lista, listaGeneticas) {
     const tbody = document.getElementById('tabela-lotes');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Carregando...</td></tr>';
-
-    const data = await fetchLotes();
     tbody.innerHTML = '';
     
-    if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhum lote encontrado.</td></tr>';
+    if(lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhum lote encontrado com os filtros atuais.</td></tr>';
         return;
     }
 
-    const geneticas = await fetchGeneticas();
-
-    data.forEach(lote => {
+    lista.forEach(lote => {
         let nomeGen = lote.geneticaNome;
-        if(!nomeGen && lote.geneticaId) {
-            // Com idgen mapeado para id, o find funcionará
-            const g = geneticas.find(x => x.id == lote.geneticaId);
+        if(!nomeGen && lote.geneticaId && listaGeneticas) {
+            const g = listaGeneticas.find(x => x.id == lote.geneticaId);
             nomeGen = g ? g.nome : 'ID: ' + lote.geneticaId;
         }
 
@@ -432,22 +409,21 @@ async function carregarLotes() {
     });
 }
 
-async function carregarOcorrencias() {
+// 3. OCORRÊNCIAS
+function renderizarTabelaOcorrencias(lista) {
     const tbody = document.getElementById('tabela-ocorrencias');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Carregando...</td></tr>';
-
-    const data = await fetchOcorrencias();
-    data.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
-    
     tbody.innerHTML = '';
 
-    if(data.length === 0) {
+    if(lista.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Nenhuma ocorrência encontrada.</td></tr>';
         return;
     }
 
-    data.forEach(ocorrencia => {
+    // Ordena por data (mais recente primeiro)
+    lista.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+
+    lista.forEach(ocorrencia => {
         const row = document.createElement('tr');
         const dataHoraFormatada = new Date(ocorrencia.dataHora).toLocaleString('pt-BR');
         if (ocorrencia.prioridade === 'critica') row.classList.add('row-critica');
@@ -468,26 +444,20 @@ async function carregarOcorrencias() {
         `;
         tbody.appendChild(row);
     });
-    
-    const lotes = await fetchLotes();
-    atualizarSelectLotesOcorrencias(lotes);
-    atualizarResumoOcorrencias(data);
 }
 
-async function carregarBercarios() {
+// 4. BERÇÁRIO
+function renderizarTabelaBercarios(lista) {
     const tbody = document.getElementById('tabela-bercario');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
-
-    const data = await fetchBercarios();
     tbody.innerHTML = '';
 
-    if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhum registro de berçário encontrado.</td></tr>';
+    if(lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
         return;
     }
 
-    data.forEach(bercario => {
+    lista.forEach(bercario => {
         const row = document.createElement('tr');
         const dataNascFormatada = formatarData(bercario.dataNascimento);
         const dataDesmameFormatada = bercario.dataDesmame ? formatarData(bercario.dataDesmame) : '-';
@@ -506,30 +476,23 @@ async function carregarBercarios() {
         `;
         tbody.appendChild(row);
     });
-    
-    const lotes = await fetchLotes();
-    atualizarSelectLotes(lotes);
 }
 
-async function carregarMaternidades() {
+// 5. MATERNIDADE
+function renderizarTabelaMaternidades(lista, listaGeneticas) {
     const tbody = document.getElementById('tabela-maternidade');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
-
-    const data = await fetchMaternidades();
-    const geneticas = await fetchGeneticas(); 
-
     tbody.innerHTML = '';
 
-    if(data.length === 0) {
+    if(lista.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
         return;
     }
 
-    data.forEach(maternidade => {
+    lista.forEach(maternidade => {
         let nomeGen = maternidade.geneticaNome;
-        if(!nomeGen && maternidade.geneticaId) {
-            const g = geneticas.find(x => x.id == maternidade.geneticaId);
+        if(!nomeGen && maternidade.geneticaId && listaGeneticas) {
+            const g = listaGeneticas.find(x => x.id == maternidade.geneticaId);
             nomeGen = g ? g.nome : '-';
         }
 
@@ -553,25 +516,21 @@ async function carregarMaternidades() {
     });
 }
 
-async function carregarInseminacoes() {
+// 6. INSEMINAÇÃO
+function renderizarTabelaInseminacoes(lista, listaGeneticas) {
     const tbody = document.getElementById('tabela-inseminacao');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
-    
-    const data = await fetchInseminacoes();
-    const geneticas = await fetchGeneticas();
-
     tbody.innerHTML = '';
 
-    if(data.length === 0) {
+    if(lista.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhum registro encontrado.</td></tr>';
         return;
     }
 
-    data.forEach(inseminacao => {
+    lista.forEach(inseminacao => {
         let nomeGen = inseminacao.geneticaMachoNome;
-        if(!nomeGen && inseminacao.geneticaMachoId) {
-            const g = geneticas.find(x => x.id == inseminacao.geneticaMachoId);
+        if(!nomeGen && inseminacao.geneticaMachoId && listaGeneticas) {
+            const g = listaGeneticas.find(x => x.id == inseminacao.geneticaMachoId);
             nomeGen = g ? g.nome : '-';
         }
 
@@ -595,9 +554,260 @@ async function carregarInseminacoes() {
     });
 }
 
+
+// =================================================================
+// === FUNÇÕES CARREGADORAS (FETCH E CHAMA RENDER) ===
+// =================================================================
+
+async function carregarGeneticas() {
+    const tbody = document.getElementById('tabela-geneticas');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
+    const data = await fetchGeneticas();
+    renderizarTabelaGeneticas(data);
+}
+
+async function carregarLotes() {
+    const tbody = document.getElementById('tabela-lotes');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Carregando...</td></tr>';
+    const [lotes, geneticas] = await Promise.all([fetchLotes(), fetchGeneticas()]);
+    renderizarTabelaLotes(lotes, geneticas);
+}
+
+async function carregarOcorrencias() {
+    const tbody = document.getElementById('tabela-ocorrencias');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Carregando...</td></tr>';
+    const data = await fetchOcorrencias();
+    renderizarTabelaOcorrencias(data);
+    
+    // Atualiza selects e KPI
+    const lotes = await fetchLotes();
+    atualizarSelectLotesOcorrencias(lotes);
+    atualizarResumoOcorrencias(data);
+}
+
+async function carregarBercarios() {
+    const tbody = document.getElementById('tabela-bercario');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
+    const data = await fetchBercarios();
+    renderizarTabelaBercarios(data);
+    
+    const lotes = await fetchLotes();
+    atualizarSelectLotes(lotes);
+}
+
+async function carregarMaternidades() {
+    const tbody = document.getElementById('tabela-maternidade');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
+    const [maternidades, geneticas] = await Promise.all([fetchMaternidades(), fetchGeneticas()]);
+    renderizarTabelaMaternidades(maternidades, geneticas);
+}
+
+async function carregarInseminacoes() {
+    const tbody = document.getElementById('tabela-inseminacao');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>';
+    const [inseminacoes, geneticas] = await Promise.all([fetchInseminacoes(), fetchGeneticas()]);
+    renderizarTabelaInseminacoes(inseminacoes, geneticas);
+}
+
+
+// =================================================================
+// === CONFIGURAÇÃO DE BUSCA E FILTROS ===
+// =================================================================
+
+function configurarBotoesBusca() {
+    
+    // 1. GENÉTICAS
+    const btnGenetica = document.getElementById('btn-buscar-genetica');
+    if (btnGenetica) {
+        btnGenetica.addEventListener('click', async () => {
+            btnGenetica.textContent = 'Buscando...';
+            btnGenetica.disabled = true;
+            try {
+                const termo = document.getElementById('filtro-genetica').value.toLowerCase().trim();
+                const todos = await fetchGeneticas();
+                
+                const filtrados = todos.filter(g => g.nome.toLowerCase().includes(termo));
+                renderizarTabelaGeneticas(filtrados);
+            } finally {
+                btnGenetica.textContent = 'Buscar';
+                btnGenetica.disabled = false;
+            }
+        });
+    }
+
+    // 2. LOTES
+    const btnLote = document.getElementById('btn-buscar-lote');
+    if (btnLote) {
+        btnLote.addEventListener('click', async () => {
+            btnLote.textContent = 'Buscando...';
+            btnLote.disabled = true;
+            try {
+                const filtroGen = document.getElementById('filtro-lote-genetica').value;
+                const filtroStatus = document.getElementById('filtro-lote-status').value;
+                
+                // Busca dados frescos do servidor
+                const [lotes, geneticas] = await Promise.all([fetchLotes(), fetchGeneticas()]);
+
+                const filtrados = lotes.filter(l => {
+                    const matchGen = !filtroGen || l.geneticaId.toString() === filtroGen;
+                    const matchStatus = !filtroStatus || l.status === filtroStatus;
+                    return matchGen && matchStatus;
+                });
+                renderizarTabelaLotes(filtrados, geneticas);
+            } finally {
+                btnLote.textContent = 'Buscar';
+                btnLote.disabled = false;
+            }
+        });
+    }
+
+    // 3. OCORRÊNCIAS
+    const btnOcorrencia = document.getElementById('btn-buscar-ocorrencia');
+    if (btnOcorrencia) {
+        btnOcorrencia.addEventListener('click', async () => {
+            btnOcorrencia.textContent = 'Buscando...';
+            btnOcorrencia.disabled = true;
+            try {
+                const filtroLote = document.getElementById('filtro-ocorrencia-lote').value;
+                const filtroTipo = document.getElementById('filtro-ocorrencia-tipo').value;
+                const filtroPrioridade = document.getElementById('filtro-ocorrencia-prioridade').value;
+
+                const todos = await fetchOcorrencias();
+
+                const filtrados = todos.filter(o => {
+                    // Para o lote, precisamos verificar se o ID bate. 
+                    // Como fetchOcorrencias retorna o NOME do lote no campo loteNome,
+                    // e o select tem o ID, precisaríamos mapear.
+                    // Porém, para simplificar e garantir funcionamento, vamos comparar se foi selecionado algo.
+                    // Se o filtroLote tem valor (ID), o ideal é cruzar com a lista de lotes,
+                    // mas aqui vamos assumir que o usuário quer filtrar pelo lote selecionado.
+                    // ATENÇÃO: O objeto 'o' tem loteNome, não loteId.
+                    // Vamos ter que buscar os lotes para saber o nome do ID selecionado.
+                    return true; 
+                });
+                
+                // Refazendo filtro com lógica correta de ID -> Nome
+                let lotesRef = [];
+                if(filtroLote) lotesRef = await fetchLotes();
+                
+                const resultadoFinal = todos.filter(o => {
+                    let matchLote = true;
+                    if (filtroLote) {
+                         const loteAlvo = lotesRef.find(l => l.id == filtroLote);
+                         if (loteAlvo) {
+                             matchLote = o.loteNome === loteAlvo.nome;
+                         }
+                    }
+                    const matchTipo = !filtroTipo || o.tipo === filtroTipo;
+                    const matchPrioridade = !filtroPrioridade || o.prioridade === filtroPrioridade;
+                    return matchLote && matchTipo && matchPrioridade;
+                });
+
+                renderizarTabelaOcorrencias(resultadoFinal);
+            } finally {
+                btnOcorrencia.textContent = 'Buscar';
+                btnOcorrencia.disabled = false;
+            }
+        });
+    }
+
+    // 4. BERÇÁRIO
+    const btnBercario = document.getElementById('btn-buscar-bercario');
+    if (btnBercario) {
+        btnBercario.addEventListener('click', async () => {
+            btnBercario.textContent = 'Buscando...';
+            btnBercario.disabled = true;
+            try {
+                const filtroLote = document.getElementById('filtro-bercario-lote').value; // ID do lote
+                const filtroStatus = document.getElementById('filtro-bercario-status').value;
+                
+                const todos = await fetchBercarios();
+                let lotesRef = [];
+                if(filtroLote) lotesRef = await fetchLotes();
+
+                const filtrados = todos.filter(b => {
+                     let matchLote = true;
+                     if(filtroLote) {
+                         const loteAlvo = lotesRef.find(l => l.id == filtroLote);
+                         matchLote = loteAlvo && b.loteNome === loteAlvo.nome;
+                     }
+                     const matchStatus = !filtroStatus || b.status === filtroStatus;
+                     return matchLote && matchStatus;
+                });
+
+                renderizarTabelaBercarios(filtrados);
+            } finally {
+                btnBercario.textContent = 'Buscar';
+                btnBercario.disabled = false;
+            }
+        });
+    }
+
+    // 5. MATERNIDADE
+    const btnMaternidade = document.getElementById('btn-buscar-maternidade');
+    if (btnMaternidade) {
+        btnMaternidade.addEventListener('click', async () => {
+            btnMaternidade.textContent = 'Buscando...';
+            btnMaternidade.disabled = true;
+            try {
+                const filtroGen = document.getElementById('filtro-maternidade-genetica').value;
+                const filtroStatus = document.getElementById('filtro-maternidade-status').value;
+                
+                const [todos, geneticas] = await Promise.all([fetchMaternidades(), fetchGeneticas()]);
+                
+                const filtrados = todos.filter(m => {
+                    const matchGen = !filtroGen || m.geneticaId.toString() === filtroGen;
+                    const matchStatus = !filtroStatus || m.status === filtroStatus;
+                    return matchGen && matchStatus;
+                });
+
+                renderizarTabelaMaternidades(filtrados, geneticas);
+            } finally {
+                btnMaternidade.textContent = 'Buscar';
+                btnMaternidade.disabled = false;
+            }
+        });
+    }
+
+    // 6. INSEMINAÇÃO
+    const btnInseminacao = document.getElementById('btn-buscar-inseminacao');
+    if (btnInseminacao) {
+        btnInseminacao.addEventListener('click', async () => {
+            btnInseminacao.textContent = 'Buscando...';
+            btnInseminacao.disabled = true;
+            try {
+                const filtroDias = document.getElementById('filtro-inseminacao-periodo').value;
+                const filtroResultado = document.getElementById('filtro-inseminacao-resultado').value;
+                
+                const [todos, geneticas] = await Promise.all([fetchInseminacoes(), fetchGeneticas()]);
+                
+                const filtrados = todos.filter(i => {
+                    let matchDias = true;
+                    if (filtroDias && i.dataInseminacao) {
+                        const dataIns = new Date(i.dataInseminacao);
+                        const hoje = new Date();
+                        const diffTime = Math.abs(hoje - dataIns);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        matchDias = diffDays <= parseInt(filtroDias);
+                    }
+                    const matchRes = !filtroResultado || i.resultado === filtroResultado;
+                    return matchDias && matchRes;
+                });
+
+                renderizarTabelaInseminacoes(filtrados, geneticas);
+            } finally {
+                btnInseminacao.textContent = 'Buscar';
+                btnInseminacao.disabled = false;
+            }
+        });
+    }
+}
+
+
 // =================================================================
 // === MODAIS e LISTENERS (UI) ===
 // =================================================================
+// (Funções de Modais mantidas idênticas, apenas o final atualizado)
 
 // --- Genética ---
 function abrirModalGenetica() {
@@ -608,10 +818,8 @@ function abrirModalGenetica() {
 }
 async function editarGenetica(id) {
     if (!id || isNaN(id)) return;
-
     const geneticas = await fetchGeneticas();
     geneticaEditando = geneticas.find(g => g.id == id);
-    
     if (geneticaEditando) {
         document.getElementById('titulo-modal-genetica').textContent = 'Editar Genética';
         document.getElementById('nome-genetica').value = geneticaEditando.nome;
@@ -625,7 +833,6 @@ async function excluirGenetica(id) {
     const geneticas = await fetchGeneticas();
     const item = geneticas.find(g => g.id == id); 
     const nome = item ? item.nome : 'Item';
-
     const onConfirm = async () => {
         try {
             await deleteGenetica(id);
@@ -633,14 +840,11 @@ async function excluirGenetica(id) {
             await atualizarRelatorios();
             if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Excluído!', 'Genética excluída com sucesso.');
         } catch (e) {
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message || 'Não foi possível excluir.');
+            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', e.message);
         }
     };
-    if (typeof mostrarConfirmacao === 'function') {
-        mostrarConfirmacao('genética', id, nome, onConfirm);
-    } else {
-        if(confirm(`Excluir genética ${nome}?`)) onConfirm();
-    }
+    if (typeof mostrarConfirmacao === 'function') mostrarConfirmacao('genética', id, nome, onConfirm);
+    else if(confirm(`Excluir genética ${nome}?`)) onConfirm();
 }
 function fecharModalGenetica() { 
     const modal = document.getElementById('modal-genetica');
@@ -676,9 +880,7 @@ async function excluirLote(id) {
             await carregarLotes(); 
             await atualizarRelatorios();
             mostrarNotificacao('Excluído!', 'Lote excluído.');
-        } catch (e) {
-            mostrarNotificacao('Erro', e.message);
-        }
+        } catch (e) { mostrarNotificacao('Erro', e.message); }
     };
     mostrarConfirmacao('lote', id, 'este lote', onConfirm); 
 }
@@ -693,14 +895,11 @@ function abrirModalOcorrencia() {
     ocorrenciaEditando = null;
     document.getElementById('titulo-modal-ocorrencia').textContent = 'Nova Ocorrência';
     document.getElementById('form-ocorrencia').reset();
-    
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('data-hora-ocorrencia').value = now.toISOString().slice(0,16);
-
     const nomeVet = localStorage.getItem('nomeUsuario');
     if (nomeVet) document.getElementById('veterinario-responsavel').value = nomeVet;
-    
     document.getElementById('modal-ocorrencia').style.display = 'block';
 }
 async function editarOcorrencia(id) {
@@ -708,20 +907,13 @@ async function editarOcorrencia(id) {
     ocorrenciaEditando = ocorrencias.find(o => o.id == id);
     if (ocorrenciaEditando) {
         document.getElementById('titulo-modal-ocorrencia').textContent = 'Editar Ocorrência';
-        
         const lotes = await fetchLotes();
         const loteObj = lotes.find(l => l.nome === ocorrenciaEditando.loteNome);
         if (loteObj) document.getElementById('lote-ocorrencia').value = loteObj.id;
-
         document.getElementById('tipo-ocorrencia').value = ocorrenciaEditando.tipo;
         document.getElementById('prioridade-ocorrencia').value = ocorrenciaEditando.prioridade;
-        
-        if (ocorrenciaEditando.dataHora) {
-             document.getElementById('data-hora-ocorrencia').value = ocorrenciaEditando.dataHora.slice(0,16);
-        }
-
+        if (ocorrenciaEditando.dataHora) document.getElementById('data-hora-ocorrencia').value = ocorrenciaEditando.dataHora.slice(0,16);
         document.getElementById('titulo-ocorrencia').value = ocorrenciaEditando.titulo;
-        // Preenchendo com vazio caso venha do backend como vazio
         document.getElementById('descricao-ocorrencia').value = ocorrenciaEditando.descricao || '';
         document.getElementById('animais-afetados').value = ocorrenciaEditando.animaisAfetados || 0;
         document.getElementById('medicamento-aplicado').value = ocorrenciaEditando.medicamentoAplicado || '';
@@ -735,9 +927,7 @@ async function editarOcorrencia(id) {
 async function visualizarOcorrencia(id) {
     const ocorrencias = await fetchOcorrencias();
     const ocorrencia = ocorrencias.find(o => o.id == id);
-    if (ocorrencia) {
-        alert(`🔍 ID #${ocorrencia.id}\n${ocorrencia.titulo}\n\n${ocorrencia.descricao}`);
-    }
+    if (ocorrencia) alert(`🔍 ID #${ocorrencia.id}\n${ocorrencia.titulo}\n\n${ocorrencia.descricao}`);
 }
 async function excluirOcorrencia(id) { 
     const onConfirm = async () => {
@@ -746,9 +936,7 @@ async function excluirOcorrencia(id) {
             await carregarOcorrencias(); 
             await atualizarRelatorios();
             mostrarNotificacao('Excluído!', 'Ocorrência excluída.');
-        } catch(e) {
-            mostrarNotificacao('Erro', e.message);
-        }
+        } catch(e) { mostrarNotificacao('Erro', e.message); }
     };
     mostrarConfirmacao('ocorrência', id, 'este item', onConfirm);
 }
@@ -758,7 +946,7 @@ function fecharModalOcorrencia() {
     ocorrenciaEditando = null; 
 }
 
-// --- Berçário ---
+// --- Berçário, Maternidade, Inseminação... (Funções CRUD seguem padrão similar, omitidas por brevidade mas lógica de modal é a mesma) ---
 function abrirModalBercario() {
     bercarioEditando = null;
     document.getElementById('titulo-modal-bercario').textContent = 'Novo Registro';
@@ -771,11 +959,9 @@ async function editarBercario(id) {
     bercarioEditando = bercarios.find(b => b.id == id);
     if (bercarioEditando) {
         document.getElementById('titulo-modal-bercario').textContent = 'Editar Registro';
-        
         const lotes = await fetchLotes();
         const loteObj = lotes.find(l => l.nome === bercarioEditando.loteNome);
         if(loteObj) document.getElementById('lote-bercario').value = loteObj.id;
-
         document.getElementById('quantidade-leitoes').value = bercarioEditando.quantidadeLeitoes;
         document.getElementById('data-nascimento').value = bercarioEditando.dataNascimento;
         document.getElementById('peso-medio').value = bercarioEditando.pesoMedio;
@@ -791,9 +977,7 @@ async function excluirBercario(id) {
             await carregarBercarios(); 
             await atualizarRelatorios();
             mostrarNotificacao('Excluído!', 'Registro excluído.');
-        } catch(e) {
-            mostrarNotificacao('Erro', e.message);
-        }
+        } catch(e) { mostrarNotificacao('Erro', e.message); }
     };
     mostrarConfirmacao('registro', id, `ID ${id}`, onConfirm);
 }
@@ -803,13 +987,11 @@ function fecharModalBercario() {
     bercarioEditando = null; 
 }
 
-// --- Maternidade ---
 function abrirModalMaternidade() {
     maternidadeEditando = null;
     document.getElementById('titulo-modal-maternidade').textContent = 'Nova Porca';
     document.getElementById('form-maternidade').reset();
     document.getElementById('modal-maternidade').style.display = 'block';
-    
     const dtCob = document.getElementById('data-cobertura');
     const dtParto = document.getElementById('data-parto-prevista');
     dtCob.onchange = function() {
@@ -841,9 +1023,7 @@ async function excluirMaternidade(id) {
             await carregarMaternidades(); 
             await atualizarRelatorios();
             mostrarNotificacao('Excluído!', 'Registro excluído.');
-        } catch(e) {
-            mostrarNotificacao('Erro', e.message);
-        }
+        } catch(e) { mostrarNotificacao('Erro', e.message); }
     };
     mostrarConfirmacao('maternidade', id, 'este item', onConfirm);
 }
@@ -853,7 +1033,6 @@ function fecharModalMaternidade() {
     maternidadeEditando = null; 
 }
 
-// --- Inseminação ---
 function abrirModalInseminacao() {
     inseminacaoEditando = null;
     document.getElementById('titulo-modal-inseminacao').textContent = 'Nova Inseminação';
@@ -882,9 +1061,7 @@ async function excluirInseminacao(id) {
             await carregarInseminacoes(); 
             await atualizarRelatorios();
             mostrarNotificacao('Excluído!', 'Registro excluído.');
-        } catch(e) {
-            mostrarNotificacao('Erro', e.message);
-        }
+        } catch(e) { mostrarNotificacao('Erro', e.message); }
     };
     mostrarConfirmacao('inseminação', id, 'este item', onConfirm);
 }
@@ -908,7 +1085,6 @@ function atualizarSelectGeneticas(data) {
         document.getElementById('filtro-maternidade-genetica') 
     ];
     const optionsHtml = data.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
-    
     selects.forEach((select) => {
         if (!select) return;
         const firstOption = select.options[0] ? select.options[0].outerHTML : '<option value="">Selecione</option>';
@@ -940,7 +1116,6 @@ async function atualizarResumoOcorrencias(data) {
     const elCriticas = document.getElementById('ocorrencias-criticas');
     const elPendentes = document.getElementById('ocorrencias-pendentes');
     const elResolvidas = document.getElementById('ocorrencias-resolvidas-hoje');
-    
     if(!elCriticas) return;
     if(!data) data = await fetchOcorrencias();
 
@@ -957,12 +1132,10 @@ async function atualizarResumoOcorrencias(data) {
 async function atualizarRelatorios() {
     const elGen = document.getElementById('total-geneticas');
     if(!elGen) return;
-
     try {
         const [geneticas, lotes, bercarios, maternidades, inseminacoes] = await Promise.all([
             fetchGeneticas(), fetchLotes(), fetchBercarios(), fetchMaternidades(), fetchInseminacoes()
         ]);
-
         document.getElementById('total-geneticas').textContent = geneticas.filter(g => g.status === 'ativa').length;
         document.getElementById('total-lotes').textContent = lotes.filter(l => l.status === 'ativo').length;
         document.getElementById('total-animais').textContent = lotes.reduce((sum, lote) => sum + lote.quantidadeAnimais, 0);
@@ -978,10 +1151,10 @@ async function atualizarRelatorios() {
 // === LISTENERS (Formulários e Botões) ===
 // =================================================================
 
-function configuringForms() { /* Compatibilidade nome antigo */ configurarFormularios(); }
+function configuringForms() { configurarFormularios(); }
 
 function configurarFormularios() {
-    // GENÉTICA
+    // FORM GENETICA
     const formGenetica = document.getElementById('form-genetica');
     if(formGenetica) formGenetica.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -999,12 +1172,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalGenetica();
             if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Sucesso', 'Genética salva.');
-        } catch(err) { 
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); 
-        }
+        } catch(err) { if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); }
     });
 
-    // LOTE
+    // FORM LOTE
     const formLote = document.getElementById('form-lote');
     if(formLote) formLote.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -1023,21 +1194,16 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalLote();
             mostrarNotificacao('Sucesso', 'Lote salvo.');
-        } catch(err) { 
-            const msg = err.message || 'Falha ao salvar lote';
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
-        }
+        } catch(err) { if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); }
     });
 
-    // OCORRÊNCIAS
+    // FORM OCORRÊNCIA
     const formOcorrencia = document.getElementById('form-ocorrencia');
     if(formOcorrencia) formOcorrencia.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
-        
         const loteSelect = document.getElementById('lote-ocorrencia');
         const loteNome = loteSelect.options[loteSelect.selectedIndex].text.split(' (')[0]; 
-
         const dados = {
             id: ocorrenciaEditando ? ocorrenciaEditando.id : null,
             loteNome: loteNome,
@@ -1053,27 +1219,22 @@ function configurarFormularios() {
             proximasAcoes: formData.get('proximas-acoes'),
             status: formData.get('status-ocorrencia')
         };
-        
         try {
             await saveOcorrencia(dados);
             await carregarOcorrencias();
             await atualizarRelatorios();
             fecharModalOcorrencia();
             mostrarNotificacao('Sucesso', 'Ocorrência salva.');
-        } catch(err) { 
-            const msg = err.message || 'Falha ao salvar ocorrência';
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
-        }
+        } catch(err) { if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); }
     });
 
-    // BERÇÁRIO
+    // FORM BERÇÁRIO
     const formBercario = document.getElementById('form-bercario');
     if(formBercario) formBercario.addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
         const loteSelect = document.getElementById('lote-bercario');
         const loteNome = loteSelect.options[loteSelect.selectedIndex].text;
-
         const dados = {
             id: bercarioEditando ? bercarioEditando.id : null,
             loteNome: loteNome,
@@ -1089,13 +1250,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalBercario();
             mostrarNotificacao('Sucesso', 'Berçário salvo.');
-        } catch(err) { 
-            const msg = err.message || 'Falha ao salvar berçário';
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
-        }
+        } catch(err) { if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); }
     });
 
-    // MATERNIDADE
+    // FORM MATERNIDADE
     const formMaternidade = document.getElementById('form-maternidade');
     if(formMaternidade) formMaternidade.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -1115,13 +1273,10 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalMaternidade();
             mostrarNotificacao('Sucesso', 'Maternidade salva.');
-        } catch(err) { 
-            const msg = err.message || 'Falha ao salvar maternidade';
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
-        }
+        } catch(err) { if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); }
     });
 
-    // INSEMINAÇÃO
+    // FORM INSEMINAÇÃO
     const formInseminacao = document.getElementById('form-inseminacao');
     if(formInseminacao) formInseminacao.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -1141,16 +1296,12 @@ function configurarFormularios() {
             await atualizarRelatorios();
             fecharModalInseminacao();
             mostrarNotificacao('Sucesso', 'Inseminação salva.');
-        } catch(err) { 
-            const msg = err.message || 'Falha ao salvar inseminação';
-            if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', msg);
-        }
+        } catch(err) { if(typeof mostrarNotificacao === 'function') mostrarNotificacao('Erro', err.message); }
     });
 }
 
-// Configura os botões de abrir modal e fechar
 function configurarListenersDeBotoes() {
-    // Abrir Modais
+    // Abre modais
     document.getElementById('btn-abrir-modal-genetica')?.addEventListener('click', abrirModalGenetica);
     document.getElementById('btn-abrir-modal-lote')?.addEventListener('click', abrirModalLote);
     document.getElementById('btn-abrir-modal-ocorrencia')?.addEventListener('click', abrirModalOcorrencia);
@@ -1158,7 +1309,7 @@ function configurarListenersDeBotoes() {
     document.getElementById('btn-abrir-modal-maternidade')?.addEventListener('click', abrirModalMaternidade);
     document.getElementById('btn-abrir-modal-inseminacao')?.addEventListener('click', abrirModalInseminacao);
 
-    // Fechar Modais (X e Cancelar)
+    // Fecha modais
     const mapModais = [
         ['modal-genetica', fecharModalGenetica],
         ['modal-lote', fecharModalLote],
@@ -1167,17 +1318,18 @@ function configurarListenersDeBotoes() {
         ['modal-maternidade', fecharModalMaternidade],
         ['modal-inseminacao', fecharModalInseminacao]
     ];
-
     mapModais.forEach(([id, func]) => {
         document.getElementById(`btn-x-fechar-${id}`)?.addEventListener('click', func);
         document.getElementById(`btn-cancelar-${id}`)?.addEventListener('click', func);
         const m = document.getElementById(id);
         if(m) m.addEventListener('click', (e) => { if(e.target === m) func(); });
     });
+
+    // Configura os botões de busca
+    configurarBotoesBusca();
 }
 
 function configurarListenersDeTabelas() {
-    // Event Delegation
     document.getElementById('tabela-geneticas')?.addEventListener('click', (e) => {
         const edit = e.target.dataset.editId; const del = e.target.dataset.deleteId;
         if(edit) editarGenetica(parseInt(edit)); if(del) excluirGenetica(parseInt(del));
@@ -1206,14 +1358,6 @@ function configurarListenersDeTabelas() {
     });
 }
 
-// Filtros básicos (Mantidos com lógica visual)
 function configurarFiltros() {
-    const filtroGenetica = document.getElementById('filtro-genetica');
-    if(filtroGenetica) filtroGenetica.addEventListener('input', function() {
-        const filtro = this.value.toLowerCase();
-        document.querySelectorAll('#tabela-geneticas tbody tr').forEach(row => { 
-            row.style.display = (row.cells[1]?.textContent.toLowerCase() || '').includes(filtro) ? '' : 'none'; 
-        });
-    });
-    // Demais filtros podem ser reativados conforme necessidade
+    // Os filtros automáticos de input foram removidos em favor do botão Buscar explícito.
 }

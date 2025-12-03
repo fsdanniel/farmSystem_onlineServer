@@ -80,7 +80,7 @@ Gerencia registros de inseminação, permitindo criação, edição, listagem e 
 | **POST**   | `/inseminacoes`     | Cria ou edita uma inseminação (upsert). Se `id` estiver presente, é edição. | **Sem id (criação):** brincoFemea, geneticaMacho, dataInseminacao, tecnica, resultado, dataVerificacao. <br> **Com id (edição):** todos os campos incluindo id. | `{ sucesso: true, operacao: "criado" }` ou `{ sucesso: true, operacao: "editado" }` | `novoRegistroInseminacao(...)`, `editarRegistroInseminacao(...)` |
 | **DELETE** | `/inseminacoes/:id` | Exclui inseminação pelo ID.                                                 | Não se aplica.                                                                                                                                                  | `{ sucesso: true, operacao: "excluido" }`                                           | `excluirRegistroInseminacao($1)`                                 |
 
-###📌 Observações Importantes
+### 📌 Observações Importantes
 
 O endpoint POST funciona como upsert: cria se não houver id, edita se houver.
 
@@ -132,7 +132,7 @@ inseminacoesPendentes
 | ------- | ----------------- | ----------------------------------------------------------------------------- | --------------------------- | ------------------------------- | -------------------------------- | ----------------------------- |
 | **GET** | `/api/relatorios` | Retorna dados de *partos* ou *desmames*, opcionalmente filtrados por período. | `tipo` (obrigatório: partos | desmames), `dataIni`, `dataFim` | `{ ok: true, resultado: [...] }` | `buscaRelatorios($1, $2, $3)` |
 
-###❌ Possíveis Erros
+### ❌ Possíveis Erros
 
 400 – Tipo inválido
 { ok: false, erro: "Tipo inválido. Use: partos | desmames" }
